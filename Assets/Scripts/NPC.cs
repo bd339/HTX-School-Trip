@@ -3,8 +3,7 @@
 class NPC : Hotspot {
 
     new protected void OnMouseDown () {
-        Camera.main.GetComponent<InvestigationControls> ().Target =
-            transform.position;
+        Camera.main.GetComponent<InvestigationControls> ().Target = transform.position;
 
         foreach (var h in FindObjectsOfType<Hotspot> ()) {
             h.GetComponent<BoxCollider> ().enabled = false;
@@ -22,9 +21,7 @@ class NPC : Hotspot {
     }
 
     private System.Collections.IEnumerator RunScript () {
-        yield return new WaitWhile (
-            () => Camera.main.GetComponent<InvestigationControls> ().HasTarget
-            );
+        yield return new WaitWhile (() => Camera.main.GetComponent<InvestigationControls> ().HasTarget);
 
         CooperScript.Engine.stalled = false;
         base.OnMouseDown ();

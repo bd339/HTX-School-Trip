@@ -9,7 +9,7 @@ class Player : MonoBehaviour {
     public static Player Data {
         get {
             if (pData == null) {
-                pData = FindObjectOfType<Player> ();
+                pData = HierarchyManager.FindObjectOfType<Player> ();
             }
 
             return pData;
@@ -18,17 +18,29 @@ class Player : MonoBehaviour {
 
     // Use this for initialization
     void Start () {
-        pData = FindObjectOfType<Player> ();
-
         LevelLoader.LoadData += MarkAsDeserialized;
+
+        StartCoroutine (StoreName ());
     }
 
     private void MarkAsDeserialized (GameObject gameObject, ref bool cancel) {
         wasDeserialized = true;
     }
 
+    private System.Collections.IEnumerator StoreName () {
+        yield return new WaitWhile (() => LevelSerializer.IsDeserializing);
+
+        if (!wasDeserialized) {
+            playerName = LevelSerializer.PlayerName;
+        }
+    }
+
     [DoNotSerialize]
     public bool wasDeserialized;
 
     public bool gamePaused;
+
+    public string playerName;
+
+    public string location = "Unknown";
 }

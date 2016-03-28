@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 
 [RequireComponent (typeof (BoxCollider), typeof (SpriteRenderer))]
-[DoNotSerializePublic]
+[DoNotSerialize]
 class Hotspot : MonoBehaviour {
 
     [TextArea (0, 100)]

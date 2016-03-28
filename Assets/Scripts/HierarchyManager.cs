@@ -1,24 +1,22 @@
 ﻿using UnityEngine;
 
+// wrapper for Unity 5.4 beta methods
 class HierarchyManager {
 
-	public static GameObject FindChild (string name) {
-		return FindChild (name, GameObject.Find ("Root").transform);
-	}
+    public static GameObject Find (string name) {
+        return GameObject.Find ("Root").transform.FindChildIncludingDeactivated (name).gameObject;
+    }
 
-	public static GameObject FindChild (string name, Transform t) {
-		for (int i = 0; i < t.childCount; i++) {
-			if (t.GetChild (i).name.Equals (name)) {
-				return t.GetChild (i).gameObject;
-			} else {
-				GameObject child = FindChild (name, t.GetChild (i));
+    public static GameObject Find (string name, Transform t) {
+        return t.FindChildIncludingDeactivated (name).gameObject;
+    }
 
-				if (child != null) {
-					return child;
-				}
-			}
-		}
+    public static T [] FindObjectsOfType<T> () where T : Component {
+        return GameObject.Find ("Root").transform.GetAllComponentsInChildren<T> ();
+    }
 
-		return null;
-	}
+    public static T FindObjectOfType<T> () where T : Component {
+        var a = FindObjectsOfType<T> ();
+        return a.Length > 0 ? a [0] : null;
+    }
 }

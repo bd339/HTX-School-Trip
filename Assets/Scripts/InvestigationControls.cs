@@ -9,7 +9,7 @@ class InvestigationControls : MonoBehaviour {
     public static InvestigationControls Controls {
         get {
             if (controls == null) {
-                controls = FindObjectOfType<InvestigationControls> ();
+                controls = HierarchyManager.FindObjectOfType<InvestigationControls> ();
             }
 
             return controls;
@@ -41,8 +41,6 @@ class InvestigationControls : MonoBehaviour {
 
     // Use this for initialization
     void Start () {
-        controls = FindObjectOfType<InvestigationControls> ();
-
         Vector3 v1 = new Vector3 (0, 0, backgroundMesh.bounds.extents.z);
         float halfHorizView = Camera.main.orthographicSize * Camera.main.aspect;
         Vector3 v2 = new Vector3 (halfHorizView, 0, Mathf.Sqrt (Mathf.Pow (v1.z, 2) - Mathf.Pow (halfHorizView, 2)));

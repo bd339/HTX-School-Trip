@@ -10,7 +10,7 @@ class ScrollIndicator : MonoBehaviour {
     public static ScrollIndicator Indicators {
         get {
             if (indicators == null) {
-                indicators = FindObjectOfType<ScrollIndicator> ();
+                indicators = HierarchyManager.FindObjectOfType<ScrollIndicator> ();
             }
 
             return indicators;
@@ -71,9 +71,7 @@ class ScrollIndicator : MonoBehaviour {
 
     // Use this for initialization
     void Start () {
-        indicators = FindObjectOfType<ScrollIndicator> ();
         enabled = false;
-
         StartCoroutine (Deactivate ());
     }
 
@@ -81,11 +79,10 @@ class ScrollIndicator : MonoBehaviour {
         yield return new WaitWhile (() => LevelSerializer.IsDeserializing);
 
         if (!Player.Data.wasDeserialized) {
-            upIndicator    = HierarchyManager.FindChild ("Up", transform).GetComponent<Image> ();
-            downIndicator  = HierarchyManager.FindChild ("Down", transform).GetComponent<Image> ();
-            leftIndicator  = HierarchyManager.FindChild ("Left", transform).GetComponent<Image> ();
-            rightIndicator = HierarchyManager.FindChild ("Right", transform).GetComponent<Image> ();
-
+            upIndicator    = HierarchyManager.Find ("Up", transform).GetComponent<Image> ();
+            downIndicator  = HierarchyManager.Find ("Down", transform).GetComponent<Image> ();
+            leftIndicator  = HierarchyManager.Find ("Left", transform).GetComponent<Image> ();
+            rightIndicator = HierarchyManager.Find ("Right", transform).GetComponent<Image> ();
             gameObject.SetActive (false);
         }
 
@@ -98,9 +95,9 @@ class ScrollIndicator : MonoBehaviour {
             return;
         }
 
-        upIndicator.gameObject.SetActive (true);
-        downIndicator.gameObject.SetActive (true);
-        leftIndicator.gameObject.SetActive (true);
+        upIndicator.gameObject.   SetActive (true);
+        downIndicator.gameObject. SetActive (true);
+        leftIndicator.gameObject. SetActive (true);
         rightIndicator.gameObject.SetActive (true);
 
         if (upActive) {

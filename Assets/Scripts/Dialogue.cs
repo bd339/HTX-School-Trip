@@ -14,7 +14,7 @@ class Dialogue : MonoBehaviour {
     public static Dialogue ChatboxDialogue {
         get {
             if (dialogue == null) {
-                dialogue = FindObjectOfType<Dialogue> ();
+                dialogue = HierarchyManager.FindObjectOfType<Dialogue> ();
             }
 
             return dialogue;
@@ -25,7 +25,7 @@ class Dialogue : MonoBehaviour {
 
     public string Nameplate {
         set {
-            HierarchyManager.FindChild ("Nameplate", transform).GetComponent<Text> ().text = value;
+            HierarchyManager.Find ("Nameplate", transform).GetComponent<Text> ().text = value;
         }
     }
 
@@ -81,9 +81,7 @@ class Dialogue : MonoBehaviour {
 
     // Use this for initialization
     void Start () {
-        dialogue = FindObjectOfType<Dialogue> ();
-
-        chatboxContent = HierarchyManager.FindChild ("Content", transform).GetComponent<Text> ();
+        chatboxContent = HierarchyManager.Find ("Content", transform).GetComponent<Text> ();
         StartCoroutine (DisableDialogueUI ());
     }
 
@@ -91,24 +89,13 @@ class Dialogue : MonoBehaviour {
         yield return new WaitWhile (() => LevelSerializer.IsDeserializing);
 
         if (!Player.Data.wasDeserialized) {
-            HierarchyManager.FindChild ("Chatbox").GetComponent<RectTransform> ().anchoredPosition = new Vector2 (0, -300);
+            HierarchyManager.Find ("Chatbox").GetComponent<RectTransform> ().anchoredPosition = new Vector2 (0, -300);
             gameObject.SetActive (false);
         }
     }
     
     // Update is called once per frame
     void Update () {
-        if (Input.GetKeyDown (KeyCode.Backspace)) {
-            LevelSerializer.PlayerName = "Benjamin";
-            LevelSerializer.SaveGame ("Benjaminssavedgame");
-            Debug.Log ("saved");
-        }
-
-        if (Input.GetKeyDown (KeyCode.Tab)) {
-            LevelSerializer.SavedGames ["Benjamin"] [0].Load ();
-            Debug.Log ("loaded");
-        }
-
         if (Player.Data.gamePaused || LevelSerializer.IsDeserializing) {
             return;
         }
@@ -195,7 +182,7 @@ class Dialogue : MonoBehaviour {
     }
 
     private IEnumerator HideDialogueUI () {
-        var rect = HierarchyManager.FindChild ("Chatbox").GetComponent<RectTransform> ();
+        var rect = HierarchyManager.Find ("Chatbox").GetComponent<RectTransform> ();
         var startTime = Time.time;
 
         while (rect.anchoredPosition.y > -300) {
@@ -211,7 +198,7 @@ class Dialogue : MonoBehaviour {
     }
 
     private IEnumerator ShowDialogueUI () {
-        var rect = HierarchyManager.FindChild ("Chatbox").GetComponent<RectTransform> ();
+        var rect = HierarchyManager.Find ("Chatbox").GetComponent<RectTransform> ();
         var startTime = Time.time;
 
         while (rect.anchoredPosition.y < 20) {

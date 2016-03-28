@@ -13,7 +13,7 @@ class CooperScript : MonoBehaviour {
     public static CooperScript Engine {
         get {
             if (engine == null) {
-                engine = FindObjectOfType<CooperScript> ();
+                engine = HierarchyManager.FindObjectOfType<CooperScript> ();
             }
 
             return engine;
@@ -78,9 +78,7 @@ class CooperScript : MonoBehaviour {
 
     // Use this for initialization
     void Start () {
-        engine = FindObjectOfType<CooperScript> ();
         enabled = false;
-
         StartCoroutine (AddPrimaryScript ());
     }
 
@@ -257,10 +255,6 @@ class CooperScript : MonoBehaviour {
     }
 
     private void UpdateHotspots () {
-        if (secondaryStates != null) {
-            return;
-        }
-
         foreach (Hotspot h in FindObjectsOfType<Hotspot> ()) {
             if (primaryStateId >= h.minState && h.maxState >= primaryStateId) {
                 h.GetComponent<BoxCollider> ().enabled = true;
