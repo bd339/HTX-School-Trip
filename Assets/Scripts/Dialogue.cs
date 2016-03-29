@@ -104,8 +104,9 @@ class Dialogue : MonoBehaviour {
 
         if (dialogueLine != null) {
             if (chatboxContent.text.Length == dialogueLength) {
-                if (Input.GetKey (KeyCode.Space) ||
-                    Input.GetKey (KeyCode.Return)||
+                if (Input.GetKeyDown (KeyCode.Space) ||
+                    Input.GetKeyDown (KeyCode.Return)||
+                    Input.GetKeyDown (KeyCode.RightArrow)||
                     Input.GetMouseButtonDown (0)) {
 
                     dialogueLine = null;
@@ -114,6 +115,7 @@ class Dialogue : MonoBehaviour {
             } else if (dialogueLine [dialogueIndex] == '}') {
                 if (Input.GetKeyDown (KeyCode.Space) ||
                     Input.GetKeyDown (KeyCode.Return)||
+                    Input.GetKeyDown (KeyCode.RightArrow)||
                     Input.GetMouseButtonDown (0)) {
 
                     dialogueIndex++;
@@ -121,6 +123,7 @@ class Dialogue : MonoBehaviour {
             } else {
                 if (Input.GetKeyDown (KeyCode.Space) ||
                     Input.GetKeyDown (KeyCode.Return)||
+                    Input.GetKeyDown (KeyCode.RightArrow)||
                     Input.GetMouseButtonDown (0)) {
 
                     var rem = dialogueLine.Substring (dialogueIndex);
@@ -151,6 +154,7 @@ class Dialogue : MonoBehaviour {
                 }
             } else if (Input.GetKeyDown (KeyCode.Return) ||
                 Input.GetKeyDown (KeyCode.Space) ||
+                Input.GetKeyDown (KeyCode.RightArrow) ||
                 Input.GetMouseButtonDown (0)) {
 
                 chatboxContent.text = "";
