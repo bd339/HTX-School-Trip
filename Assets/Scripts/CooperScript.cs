@@ -320,6 +320,7 @@ class CooperScript : MonoBehaviour {
             yield break;
         }
 
+        var initialAlpha = sprite.color.a;
         float startTime = Time.time;
         while (sprite.color.a < 1f) {
             if (Player.Data.gamePaused) {
@@ -327,7 +328,7 @@ class CooperScript : MonoBehaviour {
                 break;
             }
 
-            sprite.color = new Color (1f, 1f, 1f, Mathf.SmoothStep (0, 1, (Time.time - startTime) / duration));
+            sprite.color = new Color (1f, 1f, 1f, Mathf.SmoothStep (initialAlpha, 1, (Time.time - startTime) / duration));
             yield return null;
         }
     }
@@ -341,6 +342,7 @@ class CooperScript : MonoBehaviour {
             yield break;
         }
 
+        var initialAlpha = sprite.color.a;
         float startTime = Time.time;
         while (sprite.color.a > 0f) {
             if (Player.Data.gamePaused) {
@@ -348,7 +350,7 @@ class CooperScript : MonoBehaviour {
                 break;
             }
 
-            sprite.color = new Color (1f, 1f, 1f, Mathf.SmoothStep (1, 0, (Time.time - startTime) / duration));
+            sprite.color = new Color (1f, 1f, 1f, Mathf.SmoothStep (initialAlpha, 0, (Time.time - startTime) / duration));
             yield return null;
         }
 

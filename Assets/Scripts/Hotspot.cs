@@ -37,5 +37,9 @@ class Hotspot : MonoBehaviour {
         // leave court mode
         InvestigationControls.Controls.EnterInvestigationMode ();
         ScrollIndicator.Indicators.EnterInvestigationMode ();
+
+        foreach (Transform sprite in HierarchyManager.Find ("Characters").transform) {
+            Destroy (sprite.gameObject);
+        }
     }
 }
