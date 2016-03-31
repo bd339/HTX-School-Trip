@@ -9,7 +9,7 @@ class HierarchyManager {
     }
 
     public static GameObject Find (string name, Transform t) {
-        var go = t.FindChildIncludingDeactivated (name);
+        var go = t.FindChildIncludingDeactivated(name);
         return go != null ? go.gameObject : null;
     }
 

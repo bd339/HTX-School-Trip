@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using UnityEngine.UI;
 
 using System.Linq;
 using System.Collections.Generic;
@@ -208,6 +209,49 @@ class CooperScript : MonoBehaviour {
 
                 primaryStateId = int.Parse (i.Current);
                 UpdateHotspots ();
+            } else if (cmdName.Equals ("fade in")) {
+                i.MoveNext ();
+                var spriteName = i.Current;
+                var uiSprite = HierarchyManager.Find (spriteName, HierarchyManager.Find ("Characters").transform);
+                if (uiSprite != null) {
+                    if (i.MoveNext ()) {
+                        StartCoroutine (FadeInSprite (uiSprite.GetComponent<Image> (), float.Parse (i.Current)));
+                    } else {
+                        StartCoroutine (FadeInSprite (uiSprite.GetComponent<Image> ()));
+                    }
+                } else {
+                    var prefab = Resources.Load<Image> (spriteName);
+                    if (prefab == null) {
+                        Debug.Log ("There's no way to fade in " + spriteName);
+                        return;
+                    }
+                    var go = Instantiate (prefab);
+                    go.name = spriteName;
+                    go.gameObject.SetParent (HierarchyManager.Find ("Characters"));
+                    if (i.MoveNext ()) {
+                        StartCoroutine (FadeInSprite (go, float.Parse (i.Current)));
+                    } else {
+                        StartCoroutine (FadeInSprite (go));
+                    }
+                }
+            } else if (cmdName.Equals ("fade out")) {
+                i.MoveNext ();
+                var spriteName = i.Current;
+                var uiSprite = HierarchyManager.Find (spriteName, HierarchyManager.Find("Characters").transform);
+                if (uiSprite != null) {
+                    if (i.MoveNext ()) {
+                        StartCoroutine (FadeOutSprite (uiSprite.GetComponent<Image> (), float.Parse (i.Current)));
+                    } else {
+                        StartCoroutine (FadeOutSprite (uiSprite.GetComponent<Image> ()));
+                    }
+                } else {
+                    uiSprite = HierarchyManager.Find (spriteName);
+                    if (i.MoveNext ()) {
+                        StartCoroutine (FadeOutSprite (uiSprite.GetComponent<Image> (), float.Parse (i.Current)));
+                    } else {
+                        StartCoroutine (FadeOutSprite (uiSprite.GetComponent<Image> ()));
+                    }
+                }
             }
         } else if (command.StartsWith ("%")) {
             stalled = true;
@@ -264,5 +308,50 @@ class CooperScript : MonoBehaviour {
                 h.GetComponent<SpriteRenderer> ().enabled = false;
             }
         }
+    }
+
+    private System.Collections.IEnumerator FadeInSprite (Image sprite, float duration = 0.25f) {
+        StopCoroutine ("FadeOutSprite");
+
+        sprite.enabled = true;
+
+        if (duration == 0) {
+            sprite.color = new Color(1f, 1f, 1f, 1f);
+            yield break;
+        }
+
+        float startTime = Time.time;
+        while (sprite.color.a < 1f) {
+            if (Player.Data.gamePaused) {
+                sprite.color = new Color (1f, 1f, 1f, 1f);
+                break;
+            }
+
+            sprite.color = new Color (1f, 1f, 1f, Mathf.SmoothStep (0, 1, (Time.time - startTime) / duration));
+            yield return null;
+        }
+    }
+
+    private System.Collections.IEnumerator FadeOutSprite (Image sprite, float duration = 0.25f) {
+        StopCoroutine ("FadeInSprite");
+        
+        if (duration == 0) {
+            sprite.color = new Color(1f, 1f, 1f, 0f);
+            sprite.enabled = false;
+            yield break;
+        }
+
+        float startTime = Time.time;
+        while (sprite.color.a > 0f) {
+            if (Player.Data.gamePaused) {
+                sprite.color = new Color (1f, 1f, 1f, 0f);
+                break;
+            }
+
+            sprite.color = new Color (1f, 1f, 1f, Mathf.SmoothStep (1, 0, (Time.time - startTime) / duration));
+            yield return null;
+        }
+
+        sprite.enabled = false;
     }
 }
