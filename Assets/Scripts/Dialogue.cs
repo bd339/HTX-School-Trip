@@ -23,6 +23,15 @@ class Dialogue : MonoBehaviour {
 
     public float dialogueDelay = 0.05f;
 
+    public string DialogueColor {
+        set {
+            Color newColor;
+            if (ColorUtility.TryParseHtmlString (value, out newColor)) {
+                chatboxContent.color = newColor;
+            }
+        }
+    }
+
     public string Nameplate {
         set {
             HierarchyManager.Find ("Nameplate", transform).GetComponent<Text> ().text = value;

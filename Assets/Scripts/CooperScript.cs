@@ -84,7 +84,7 @@ class CooperScript : MonoBehaviour {
         StartCoroutine (AddPrimaryScript ());
     }
 
-    private System.Collections.IEnumerator AddPrimaryScript () {
+    private IEnumerator AddPrimaryScript () {
         yield return new WaitWhile (() => LevelSerializer.IsDeserializing);
 
         var newScript = AddScript (mainScriptFile.text);
@@ -122,8 +122,7 @@ class CooperScript : MonoBehaviour {
                     // dummy command to ensure that all states have at least 1 command
                     newCommands.Add ("'dummy'");
 
-                    newState.nameplate = sr.ReadLine ().
-                        Replace ("$PlayerName", LevelSerializer.PlayerName);
+                    newState.nameplate = sr.ReadLine ().Replace ("$PlayerName", LevelSerializer.PlayerName);
 
                     while (sr.Peek () != '\\' && sr.Peek () != -1) {
                         var command = sr.ReadLine ();
@@ -265,6 +264,12 @@ class CooperScript : MonoBehaviour {
                         StartCoroutine (FadeOutSprite (uiSprite.GetComponent<Image> ()));
                     }
                 }
+            } else if (cmdName.Equals ("text color")) {
+                i.MoveNext ();
+                Dialogue.ChatboxDialogue.DialogueColor = i.Current;
+            } else if (cmdName.Equals ("text delay")) {
+                i.MoveNext ();
+                Dialogue.ChatboxDialogue.dialogueDelay = float.Parse (i.Current);
             }
         } else if (command.StartsWith ("%")) {
             stalled = true;
@@ -337,7 +342,7 @@ class CooperScript : MonoBehaviour {
         sprite.enabled = true;
 
         if (duration == 0) {
-            sprite.color = new Color(1f, 1f, 1f, 1f);
+            sprite.color = new Color (1f, 1f, 1f, 1f);
             yield break;
         }
 
@@ -358,7 +363,7 @@ class CooperScript : MonoBehaviour {
         StopCoroutine ("FadeInSprite");
         
         if (duration == 0) {
-            sprite.color = new Color(1f, 1f, 1f, 0f);
+            sprite.color = new Color (1f, 1f, 1f, 0f);
             sprite.enabled = false;
             yield break;
         }
