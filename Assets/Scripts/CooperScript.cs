@@ -2,6 +2,7 @@
 using UnityEngine.UI;
 
 using System.Linq;
+using System.Collections;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 
@@ -169,7 +170,9 @@ class CooperScript : MonoBehaviour {
             cmdName = i.Current;
 
             if (cmdName.Equals ("wait")) {
-                throw new System.NotImplementedException ();
+                i.MoveNext ();
+                stalled = true;
+                StartCoroutine ("StallForSeconds", float.Parse (i.Current));
             } else if (cmdName.Equals ("mode")) {
                 i.MoveNext ();
 
@@ -220,18 +223,28 @@ class CooperScript : MonoBehaviour {
                         StartCoroutine (FadeInSprite (uiSprite.GetComponent<Image> ()));
                     }
                 } else {
-                    var prefab = Resources.Load<Image> (spriteName);
-                    if (prefab == null) {
-                        Debug.Log ("There's no way to fade in " + spriteName);
-                        return;
-                    }
-                    var go = Instantiate (prefab);
-                    go.name = spriteName;
-                    go.gameObject.SetParent (HierarchyManager.Find ("Characters"));
-                    if (i.MoveNext ()) {
-                        StartCoroutine (FadeInSprite (go, float.Parse (i.Current)));
+                    uiSprite = HierarchyManager.Find (spriteName);
+
+                    if (uiSprite != null) {
+                        if (i.MoveNext ()) {
+                            StartCoroutine (FadeInSprite (uiSprite.GetComponent<Image> (), float.Parse (i.Current)));
+                        } else {
+                            StartCoroutine (FadeInSprite (uiSprite.GetComponent<Image> ()));
+                        }
                     } else {
-                        StartCoroutine (FadeInSprite (go));
+                        var prefab = Resources.Load<Image> (spriteName);
+                        if (prefab == null) {
+                            Debug.Log ("There's no way to fade in " + spriteName);
+                            return;
+                        }
+                        var go = Instantiate (prefab);
+                        go.name = spriteName;
+                        go.gameObject.SetParent (HierarchyManager.Find ("Characters"));
+                        if (i.MoveNext ()) {
+                            StartCoroutine (FadeInSprite (go, float.Parse (i.Current)));
+                        } else {
+                            StartCoroutine (FadeInSprite (go));
+                        }
                     }
                 }
             } else if (cmdName.Equals ("fade out")) {
@@ -293,7 +306,15 @@ class CooperScript : MonoBehaviour {
             if (cmdName.Equals ("return")) {
                 secondaryStates = null;
                 UpdateHotspots ();
-                Hotspot.OnSecondaryScriptComplete (); // inline the static function?
+
+                Dialogue.ChatboxDialogue.LeaveDialogueMode ();
+                // leave court mode
+                InvestigationControls.Controls.EnterInvestigationMode ();
+                ScrollIndicator.Indicators.EnterInvestigationMode ();
+
+                foreach (Transform sprite in HierarchyManager.Find ("Characters").transform) {
+                    Destroy (sprite.gameObject);
+                }
             }
         }
     }
@@ -310,7 +331,7 @@ class CooperScript : MonoBehaviour {
         }
     }
 
-    private System.Collections.IEnumerator FadeInSprite (Image sprite, float duration = 0.25f) {
+    private IEnumerator FadeInSprite (Image sprite, float duration = 0.25f) {
         StopCoroutine ("FadeOutSprite");
 
         sprite.enabled = true;
@@ -322,7 +343,7 @@ class CooperScript : MonoBehaviour {
 
         var initialAlpha = sprite.color.a;
         float startTime = Time.time;
-        while (sprite.color.a < 1f) {
+        while (sprite != null && sprite.color.a < 1f) {
             if (Player.Data.gamePaused) {
                 sprite.color = new Color (1f, 1f, 1f, 1f);
                 break;
@@ -333,7 +354,7 @@ class CooperScript : MonoBehaviour {
         }
     }
 
-    private System.Collections.IEnumerator FadeOutSprite (Image sprite, float duration = 0.25f) {
+    private IEnumerator FadeOutSprite (Image sprite, float duration = 0.25f) {
         StopCoroutine ("FadeInSprite");
         
         if (duration == 0) {
@@ -344,7 +365,7 @@ class CooperScript : MonoBehaviour {
 
         var initialAlpha = sprite.color.a;
         float startTime = Time.time;
-        while (sprite.color.a > 0f) {
+        while (sprite != null && sprite.color.a > 0f) {
             if (Player.Data.gamePaused) {
                 sprite.color = new Color (1f, 1f, 1f, 0f);
                 break;
@@ -354,6 +375,21 @@ class CooperScript : MonoBehaviour {
             yield return null;
         }
 
-        sprite.enabled = false;
+        if (sprite != null) {
+            sprite.enabled = false;
+        }
+    }
+
+    private IEnumerator StallForSeconds (float stallTime) {
+        float startTime = Time.time;
+        while (Time.time - startTime < stallTime) {
+            if (Player.Data.gamePaused) {
+                break;
+            }
+
+            yield return null;
+        }
+
+        stalled = false;
     }
 }

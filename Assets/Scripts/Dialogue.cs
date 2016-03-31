@@ -202,6 +202,7 @@ class Dialogue : MonoBehaviour {
     }
 
     private IEnumerator ShowDialogueUI () {
+        chatboxContent.text = "";
         var rect = HierarchyManager.Find ("Chatbox").GetComponent<RectTransform> ();
         var startTime = Time.time;
 
