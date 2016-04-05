@@ -118,8 +118,16 @@ class Dialogue : MonoBehaviour {
                     Input.GetKeyDown (KeyCode.RightArrow)||
                     Input.GetMouseButtonDown (0)) {
 
+                    HierarchyManager.Find ("Next Indicator").SetActive (false);
+
                     dialogueLine = null;
                     CooperScript.Engine.stalled = false;
+                } else {
+                    var indicator = HierarchyManager.Find ("Next Indicator").GetComponent<Image> ();
+                    if (!indicator.gameObject.activeInHierarchy) {
+                        indicator.gameObject.SetActive (true);
+                        indicator.rectTransform.anchoredPosition = new Vector2 (-15, -5);
+                    }
                 }
             } else if (dialogueLine [dialogueIndex] == '}') {
                 if (Input.GetKeyDown (KeyCode.Space) ||
@@ -127,7 +135,18 @@ class Dialogue : MonoBehaviour {
                     Input.GetKeyDown (KeyCode.RightArrow)||
                     Input.GetMouseButtonDown (0)) {
 
+                    HierarchyManager.Find ("Next Indicator").SetActive (false);
+
                     dialogueIndex++;
+                } else {
+                    var indicator = HierarchyManager.Find ("Next Indicator").GetComponent<Image> ();
+                    if (!indicator.gameObject.activeInHierarchy) {
+                        indicator.gameObject.SetActive (true);
+                        float numLines = chatboxContent.preferredWidth / 1120f;
+                        float x = (numLines - Mathf.Floor (numLines)) * 1120f + 0.15f * 100 + Mathf.Floor (numLines) * 10f;
+                        float y = -Mathf.Floor (numLines) * 20f - 10f;
+                        indicator.rectTransform.anchoredPosition = new Vector2 (x, y);
+                    }
                 }
             } else {
                 if (Input.GetKeyDown (KeyCode.Space) ||
