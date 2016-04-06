@@ -270,6 +270,9 @@ class CooperScript : MonoBehaviour {
             } else if (cmdName.Equals ("text delay")) {
                 i.MoveNext ();
                 Dialogue.ChatboxDialogue.dialogueDelay = float.Parse (i.Current);
+            } else if (cmdName.Equals ("location")) {
+                i.MoveNext ();
+                Player.Data.location = i.Current;
             }
         } else if (command.StartsWith ("%")) {
             stalled = true;
