@@ -278,6 +278,15 @@ class CooperScript : MonoBehaviour {
                 var tex = Resources.Load<Texture2D> (i.Current);
                 HierarchyManager.Find ("Hopefully").GetComponent<MeshRenderer> ().material.mainTexture = tex;
                 Player.Data.panoramaTexture = i.Current;
+            } else if (cmdName.StartsWith ("sprite")) {
+                i.MoveNext ();
+                var uiSprite = HierarchyManager.Find (i.Current).GetComponent<Image> ();
+
+                if (cmdName.EndsWith ("x")) {
+                    i.MoveNext ();
+                    var x = float.Parse (i.Current);
+                    uiSprite.rectTransform.anchoredPosition = new Vector2 (x, uiSprite.rectTransform.anchoredPosition.y);
+                }
             }
         } else if (command.StartsWith ("%")) {
             stalled = true;
