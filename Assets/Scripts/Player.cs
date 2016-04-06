@@ -43,4 +43,6 @@ class Player : MonoBehaviour {
     public string playerName;
 
     public string location = "Unknown";
+
+    public string panoramaTexture = "Super panorama";
 }

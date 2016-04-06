@@ -72,6 +72,10 @@ class ScrollIndicator : MonoBehaviour {
     // Use this for initialization
     void Start () {
         enabled = false;
+        upIndicator    = HierarchyManager.Find ("Up", transform).GetComponent<Image> ();
+        downIndicator  = HierarchyManager.Find ("Down", transform).GetComponent<Image> ();
+        leftIndicator  = HierarchyManager.Find ("Left", transform).GetComponent<Image> ();
+        rightIndicator = HierarchyManager.Find ("Right", transform).GetComponent<Image> ();
         StartCoroutine (Deactivate ());
     }
 
@@ -79,10 +83,6 @@ class ScrollIndicator : MonoBehaviour {
         yield return new WaitWhile (() => LevelSerializer.IsDeserializing);
 
         if (!Player.Data.wasDeserialized) {
-            upIndicator    = HierarchyManager.Find ("Up", transform).GetComponent<Image> ();
-            downIndicator  = HierarchyManager.Find ("Down", transform).GetComponent<Image> ();
-            leftIndicator  = HierarchyManager.Find ("Left", transform).GetComponent<Image> ();
-            rightIndicator = HierarchyManager.Find ("Right", transform).GetComponent<Image> ();
             gameObject.SetActive (false);
         }
 

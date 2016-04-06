@@ -59,6 +59,8 @@ class InvestigationControls : MonoBehaviour {
 
         if (!Player.Data.wasDeserialized) {
             enabled = false;
+        } else {
+            backgroundMesh.material.mainTexture = Resources.Load<Texture2D> (Player.Data.panoramaTexture);
         }
     }
 

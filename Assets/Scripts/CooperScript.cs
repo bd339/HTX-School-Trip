@@ -273,6 +273,11 @@ class CooperScript : MonoBehaviour {
             } else if (cmdName.Equals ("location")) {
                 i.MoveNext ();
                 Player.Data.location = i.Current;
+            } else if (cmdName.Equals ("panorama")) {
+                i.MoveNext ();
+                var tex = Resources.Load<Texture2D> (i.Current);
+                HierarchyManager.Find ("Hopefully").GetComponent<MeshRenderer> ().material.mainTexture = tex;
+                Player.Data.panoramaTexture = i.Current;
             }
         } else if (command.StartsWith ("%")) {
             stalled = true;
