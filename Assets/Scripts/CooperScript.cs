@@ -93,6 +93,13 @@ class CooperScript : MonoBehaviour {
             primaryStateId = newScript.initialStateId;
             primaryCommandIndex = 0;
             UpdateHotspots ();
+        } else {
+            foreach (Transform sprite in HierarchyManager.Find ("Characters").transform) {
+                string spriteName;
+                if (Player.Data.spriteMap.TryGetValue (sprite.gameObject.name, out spriteName)) {
+                    sprite.GetComponent<Image> ().sprite = Resources.Load<Sprite> (spriteName);
+                }
+            }
         }
 
         // loading a save game after script changes is very likely to break this
@@ -239,6 +246,10 @@ class CooperScript : MonoBehaviour {
                         var go = Instantiate (prefab);
                         go.name = spriteName;
                         go.gameObject.SetParent (HierarchyManager.Find ("Characters"));
+
+                        Player.Data.spriteMap.Remove (go.name);
+                        Player.Data.spriteMap.Add (go.name, prefab.sprite.name);
+
                         if (i.MoveNext ()) {
                             StartCoroutine (FadeInSprite (go, float.Parse (i.Current)));
                         } else {
@@ -280,12 +291,52 @@ class CooperScript : MonoBehaviour {
                 Player.Data.panoramaTexture = i.Current;
             } else if (cmdName.StartsWith ("sprite")) {
                 i.MoveNext ();
-                var uiSprite = HierarchyManager.Find (i.Current).GetComponent<Image> ();
+                var oldName = i.Current;
+
+                Image uiSprite;
+                var spriteObj = HierarchyManager.Find (i.Current, HierarchyManager.Find ("Characters").transform);
+                if (spriteObj == null) {
+                    var prefab = Resources.Load<Image> (oldName);
+                    if (prefab == null) {
+                        Debug.Log ("Cannot create " + oldName);
+                        return;
+                    }
+                    var go = Instantiate (prefab);
+                    go.name = oldName;
+                    go.gameObject.SetParent (HierarchyManager.Find ("Characters"));
+                    i.MoveNext ();
+                    uiSprite = Resources.Load<Image> (i.Current);
+                } else {
+                    uiSprite = spriteObj.GetComponent<Image> ();
+                }
 
                 if (cmdName.EndsWith ("x")) {
                     i.MoveNext ();
                     var x = float.Parse (i.Current);
                     uiSprite.rectTransform.anchoredPosition = new Vector2 (x, uiSprite.rectTransform.anchoredPosition.y);
+                } else if (cmdName.EndsWith ("i")) {
+                    var copy = Instantiate (uiSprite);
+                    uiSprite.name = uiSprite.name + "_old_to_delete";
+                    copy.gameObject.SetParent (HierarchyManager.Find ("Characters"));
+                    copy.color = Color.clear;
+                    copy.name = oldName;
+                    i.MoveNext ();
+                    copy.sprite = Resources.Load<Sprite> (i.Current);
+                    Player.Data.spriteMap.Remove (oldName);
+                    Player.Data.spriteMap.Add (oldName, copy.sprite.name);
+
+                    StartCoroutine (FadeOutSprite (uiSprite, 0.25f));
+                    StartCoroutine (FadeInSprite (copy, 0.25f));
+                }
+            } else if (cmdName.Equals ("set flag")) {
+                i.MoveNext ();
+                Player.Data.flags.Add (i.Current);
+            } else if (cmdName.Equals ("has flag")) {
+                i.MoveNext ();
+                if (Player.Data.flags.Contains (i.Current)) {
+                    i.MoveNext ();
+                    CommandIndex = -1;
+                    StateId = int.Parse (i.Current);
                 }
             }
         } else if (command.StartsWith ("%")) {
@@ -354,8 +405,6 @@ class CooperScript : MonoBehaviour {
     }
 
     private IEnumerator FadeInSprite (Image sprite, float duration = 0.25f) {
-        StopCoroutine ("FadeOutSprite");
-
         sprite.enabled = true;
 
         if (duration == 0) {
@@ -377,8 +426,6 @@ class CooperScript : MonoBehaviour {
     }
 
     private IEnumerator FadeOutSprite (Image sprite, float duration = 0.25f) {
-        StopCoroutine ("FadeInSprite");
-        
         if (duration == 0) {
             sprite.color = new Color (1f, 1f, 1f, 0f);
             sprite.enabled = false;

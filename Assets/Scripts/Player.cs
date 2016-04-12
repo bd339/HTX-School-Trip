@@ -1,5 +1,7 @@
 ﻿using UnityEngine;
 
+using System.Collections.Generic;
+
 [SerializeAll]
 class Player : MonoBehaviour {
 
@@ -45,4 +47,8 @@ class Player : MonoBehaviour {
     public string location = "Unknown";
 
     public string panoramaTexture = "Super panorama";
+
+    public Dictionary<string, string> spriteMap = new Dictionary<string, string> ();
+
+    public List<string> flags = new List<string> ();
 }
