@@ -25,6 +25,7 @@ class IngameMenu : MonoBehaviour {
             HierarchyManager.Find ("Save Button"       ).       SetActive (false);
             HierarchyManager.Find ("Load Menu Button"  ).       SetActive (false);
             HierarchyManager.Find ("Remaining Save Slots Text").SetActive (false);
+            HierarchyManager.Find ("Inventory Button"  ).       SetActive (false);
         } else {
             UpdateText ();
         }
@@ -37,6 +38,8 @@ class IngameMenu : MonoBehaviour {
         if (Input.GetKeyDown (KeyCode.Escape)) {
             if (HierarchyManager.Find ("Load Menu").activeInHierarchy) {
                 ToggleLoadMenu ();
+            } else if (HierarchyManager.Find ("Inventory Menu").activeInHierarchy) {
+                ToggleInventoryMenu ();
             } else {
                 ToggleMenu ();
             }
@@ -51,6 +54,7 @@ class IngameMenu : MonoBehaviour {
         HierarchyManager.Find ("Save Button"       ).       SetActive (!HierarchyManager.Find ("Save Button"       ).       activeInHierarchy);
         HierarchyManager.Find ("Load Menu Button"  ).       SetActive (!HierarchyManager.Find ("Load Menu Button"  ).       activeInHierarchy);
         HierarchyManager.Find ("Remaining Save Slots Text").SetActive (!HierarchyManager.Find ("Remaining Save Slots Text").activeInHierarchy);
+        HierarchyManager.Find ("Inventory Button"    ).       SetActive (!HierarchyManager.Find ("Inventory Button"    ).       activeInHierarchy);
 
         Cursor.SetCursor (null, Vector2.zero, CursorMode.Auto);
 
@@ -80,6 +84,7 @@ class IngameMenu : MonoBehaviour {
         HierarchyManager.Find ("Save Button"              ).SetActive (!HierarchyManager.Find ("Save Button"       ).       activeInHierarchy);
         HierarchyManager.Find ("Load Menu Button"         ).SetActive (!HierarchyManager.Find ("Load Menu Button"  ).       activeInHierarchy);
         HierarchyManager.Find ("Remaining Save Slots Text").SetActive (!HierarchyManager.Find ("Remaining Save Slots Text").activeInHierarchy);
+        HierarchyManager.Find ("Inventory Button").SetActive (!HierarchyManager.Find ("Inventory Button").activeInHierarchy);
 
         var dropdown = HierarchyManager.Find ("Load Dropdown").GetComponent<Dropdown> ();
         dropdown.ClearOptions ();
@@ -95,5 +100,22 @@ class IngameMenu : MonoBehaviour {
     public void Load () {
         var dropdown = HierarchyManager.Find ("Load Dropdown").GetComponent<Dropdown> ();
         LevelSerializer.SavedGames [Player.Data.playerName] [dropdown.value].Load ();
+    }
+
+    public void ToggleInventoryMenu () {
+        HierarchyManager.Find ("Inventory Menu").SetActive (!HierarchyManager.Find ("Inventory Menu").activeInHierarchy);
+        gameObject.GetComponent<Image> ().enabled = !gameObject.GetComponent<Image> ().enabled;
+        HierarchyManager.Find ("Resume Play Button").SetActive (!HierarchyManager.Find ("Resume Play Button").activeInHierarchy);
+        HierarchyManager.Find ("Main Menu Button").SetActive (!HierarchyManager.Find ("Main Menu Button").activeInHierarchy);
+        HierarchyManager.Find ("Save Button").SetActive (!HierarchyManager.Find ("Save Button").activeInHierarchy);
+        HierarchyManager.Find ("Load Menu Button").SetActive (!HierarchyManager.Find ("Load Menu Button").activeInHierarchy);
+        HierarchyManager.Find ("Remaining Save Slots Text").SetActive (!HierarchyManager.Find ("Remaining Save Slots Text").activeInHierarchy);
+        HierarchyManager.Find ("Inventory Button").SetActive (!HierarchyManager.Find ("Inventory Button").activeInHierarchy);
+
+        if (!HierarchyManager.Find ("Inventory Menu").activeInHierarchy) {
+            HierarchyManager.Find ("Inventory Preview").GetComponent<Image> ().sprite = null;
+            HierarchyManager.Find ("Inventory Preview").GetComponent<Image> ().color = Color.clear;
+            HierarchyManager.Find ("Preview Text").GetComponent<Text> ().text = "";
+        }
     }
 }
