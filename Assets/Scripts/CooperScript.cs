@@ -330,7 +330,16 @@ class CooperScript : MonoBehaviour {
                 }
             } else if (cmdName.Equals ("set flag")) {
                 i.MoveNext ();
-                Player.Data.flags.Add (i.Current);
+
+                if (!Player.Data.flags.Contains(i.Current)) {
+                    Player.Data.flags.Add (i.Current);
+
+                    foreach (var item in HierarchyManager.FindObjectsOfType<InventoryItem> ()) {
+                        if (item.flag == i.Current) {
+                            item.GetComponent<Image> ().enabled = true;
+                        }
+                    }
+                }
             } else if (cmdName.Equals ("has flag")) {
                 i.MoveNext ();
                 if (Player.Data.flags.Contains (i.Current)) {
@@ -338,6 +347,16 @@ class CooperScript : MonoBehaviour {
                     CommandIndex = -1;
                     StateId = int.Parse (i.Current);
                 }
+            } else if (cmdName.Equals ("unset flag")) {
+                i.MoveNext ();
+
+                foreach (var item in HierarchyManager.FindObjectsOfType<InventoryItem> ()) {
+                    if (item.flag == i.Current) {
+                        item.GetComponent<Image> ().enabled = false;
+                    }
+                }
+
+                Player.Data.flags.Remove (i.Current);
             }
         } else if (command.StartsWith ("%")) {
             stalled = true;
