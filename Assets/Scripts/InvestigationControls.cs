@@ -41,15 +41,26 @@ class InvestigationControls : MonoBehaviour {
 
     // Use this for initialization
     void Start () {
-        Vector3 v1 = new Vector3 (0, 0, backgroundMesh.bounds.extents.z);
-        float halfHorizView = Camera.main.orthographicSize * Camera.main.aspect;
-        Vector3 v2 = new Vector3 (halfHorizView, 0, Mathf.Sqrt (Mathf.Pow (v1.z, 2) - Mathf.Pow (halfHorizView, 2)));
-        maxRightAngle = 90 - Vector3.Angle (v1, v2);
-        maxLeftAngle = 360 - maxRightAngle;
+        if (backgroundMesh.name == "Panorama") {
+            Vector3 v1 = new Vector3 (0, 0, backgroundMesh.bounds.extents.z);
+            float halfHorizView = Camera.main.orthographicSize * Camera.main.aspect;
+            Vector3 v2 = new Vector3 (halfHorizView, 0, Mathf.Sqrt (Mathf.Pow (v1.z, 2) - Mathf.Pow (halfHorizView, 2)));
+            maxRightAngle = 90 - Vector3.Angle (v1, v2);
+            maxLeftAngle = 360 - maxRightAngle;
 
-        Vector3 v3 = new Vector3 (0, Camera.main.orthographicSize, v1.z);
-        maxDownAngle = Mathf.Rad2Deg * Mathf.Atan (backgroundMesh.bounds.extents.y / v1.z) - Vector3.Angle (v1, v3);
-        maxUpAngle = 360 - maxDownAngle;
+            Vector3 v3 = new Vector3 (0, Camera.main.orthographicSize, v1.z);
+            maxDownAngle = Mathf.Rad2Deg * Mathf.Atan (backgroundMesh.bounds.extents.y / v1.z) - Vector3.Angle (v1, v3);
+            maxUpAngle = 360 - maxDownAngle;
+        } else if (backgroundMesh.name == "Flat") {
+            Vector3 v1 = new Vector3 (backgroundMesh.bounds.extents.x, 0, backgroundMesh.transform.position.z);
+            Vector3 v2 = new Vector3 (Camera.main.orthographicSize * Camera.main.aspect, 0, backgroundMesh.transform.position.z);
+            maxRightAngle = Vector3.Angle (v1, v2);
+            maxLeftAngle = 360 - maxRightAngle;
+
+            Vector3 v3 = new Vector3 (0, Camera.main.orthographicSize, v1.z);
+            maxDownAngle = Mathf.Rad2Deg * Mathf.Atan (backgroundMesh.bounds.extents.y / v1.z) - Vector3.Angle (new Vector3 (0, 0, v1.z), v3);
+            maxUpAngle = 360 - maxDownAngle;
+        }
 
         StartCoroutine (Disable ());
     }
@@ -60,7 +71,11 @@ class InvestigationControls : MonoBehaviour {
         if (!Player.Data.wasDeserialized) {
             enabled = false;
         } else {
-            backgroundMesh.material.mainTexture = Resources.Load<Texture2D> (Player.Data.panoramaTexture);
+            if (backgroundMesh.name == "Panorama") {
+                backgroundMesh.material.mainTexture = Resources.Load<Texture2D> (Player.Data.panoramaTexture);
+            } else if (backgroundMesh.name == "Flat") {
+                backgroundMesh.material.mainTexture = Resources.Load<Texture2D> (Player.Data.flatTexture);
+            }
         }
     }
 
@@ -121,7 +136,7 @@ class InvestigationControls : MonoBehaviour {
         // must be done to have angles be consistently in the interval [0, 360]
         // otherwise Unity neglects wrapping negative angles very close to 0
         float rotY = transform.eulerAngles.y < 0 ? 360 + transform.eulerAngles.y : transform.eulerAngles.y;
-
+        
         if (rotY > 180) {
             if (rotY < maxLeftAngle || Mathf.Abs (rotY - maxLeftAngle) < 0.2f) {
                 ScrollIndicator.Indicators.Left = null;
@@ -144,21 +159,10 @@ class InvestigationControls : MonoBehaviour {
             }
         }
 
-        float camX;
-
-        if (rotX > 180) {
-            camX = Mathf.Clamp (rotX - 360, maxUpAngle - 360, maxDownAngle);
-        } else {
-            camX = Mathf.Clamp (rotX, maxUpAngle - 360, maxDownAngle);
-        }
-
-        float camY;
-
-        if (rotY > 180) {
-            camY = Mathf.Clamp (rotY - 360, maxLeftAngle - 360, maxRightAngle);
-        } else {
-            camY = Mathf.Clamp (rotY, maxLeftAngle - 360, maxRightAngle);
-        }
+        float camX = rotX > 180 ? Mathf.Clamp (rotX - 360, maxUpAngle - 360, maxDownAngle) :
+                                  Mathf.Clamp (rotX, maxUpAngle - 360, maxDownAngle);
+        float camY = rotY > 180 ? Mathf.Clamp (rotY - 360, maxLeftAngle - 360, maxRightAngle) :
+                                  Mathf.Clamp (rotY, maxLeftAngle - 360, maxRightAngle);
 
         transform.eulerAngles = new Vector3 (camX, camY, 0);
     }
