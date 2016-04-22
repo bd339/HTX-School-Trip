@@ -5,6 +5,7 @@ using System.Linq;
 using System.Collections;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
+using UnityEngine.Audio;
 
 [SerializeAll]
 class CooperScript : MonoBehaviour {
@@ -369,6 +370,30 @@ class CooperScript : MonoBehaviour {
                 }
 
                 Player.Data.flags.Remove (i.Current);
+            } else if (cmdName.StartsWith ("music")) {
+                if (cmdName.EndsWith ("start")) {
+                    i.MoveNext ();
+                    var music = Resources.Load<AudioClip> (i.Current);
+                    HierarchyManager.Find ("BG Music").GetComponent<AudioSource> ().clip = music;
+                    HierarchyManager.Find ("BG Music").GetComponent<AudioSource> ().Play ();
+                } else if (cmdName.EndsWith ("stop")) {
+                    HierarchyManager.Find ("BG Music").GetComponent<AudioSource> ().Stop ();
+                } else if (cmdName.EndsWith ("snap")) {
+                    i.MoveNext ();
+                    AudioMixerSnapshot snapshot = HierarchyManager.Find ("BG Music").GetComponent<AudioSource> ().outputAudioMixerGroup.audioMixer.FindSnapshot (i.Current);
+
+                    i.MoveNext ();
+                    snapshot.TransitionTo (float.Parse (i.Current));
+                }
+            } else if (cmdName.StartsWith ("audio")) {
+                if (cmdName.EndsWith ("start")) {
+                    i.MoveNext ();
+                    var audio = Resources.Load<AudioClip> (i.Current);
+                    HierarchyManager.Find ("Sound Effects").GetComponent<AudioSource> ().clip = audio;
+                    HierarchyManager.Find ("Sound Effects").GetComponent<AudioSource> ().Play ();
+                } else if (cmdName.EndsWith ("stop")) {
+                    HierarchyManager.Find ("Sound Effects").GetComponent<AudioSource> ().Stop ();
+                }
             }
         } else if (command.StartsWith ("%")) {
             stalled = true;
