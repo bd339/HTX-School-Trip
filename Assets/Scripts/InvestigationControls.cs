@@ -16,7 +16,24 @@ class InvestigationControls : MonoBehaviour {
         }
     }
 
-    public MeshRenderer backgroundMesh;
+    [DoNotSerialize]
+    public Texture2D BackgroundTex {
+        set {
+            backgroundMesh.material.mainTexture = value;
+            CalculateViewBounds ();
+            Player.Data.backgroundTexture = backgroundMesh.material.mainTexture.name;
+        }
+    }
+    [DoNotSerialize]
+    private MeshRenderer backgroundMesh;
+    [DoNotSerialize]
+    public MeshRenderer BackgroundMesh {
+        set {
+            backgroundMesh = value;
+            meshName = backgroundMesh.name;
+        }
+    }
+    private string meshName;
 
     private bool hasTarget;
     public bool HasTarget {
@@ -41,6 +58,10 @@ class InvestigationControls : MonoBehaviour {
 
     // Use this for initialization
     void Start () {
+        StartCoroutine (Init ());
+    }
+
+    private void CalculateViewBounds() {
         if (backgroundMesh.name == "Panorama") {
             Vector3 v1 = new Vector3 (0, 0, backgroundMesh.bounds.extents.z);
             float halfHorizView = Camera.main.orthographicSize * Camera.main.aspect;
@@ -61,21 +82,22 @@ class InvestigationControls : MonoBehaviour {
             maxDownAngle = Mathf.Rad2Deg * Mathf.Atan (backgroundMesh.bounds.extents.y / v1.z) - Vector3.Angle (new Vector3 (0, 0, v1.z), v3);
             maxUpAngle = 360 - maxDownAngle;
         }
-
-        StartCoroutine (Disable ());
     }
 
-    private System.Collections.IEnumerator Disable () {
+    private System.Collections.IEnumerator Init () {
         yield return new WaitWhile (() => LevelSerializer.IsDeserializing);
 
         if (!Player.Data.wasDeserialized) {
             enabled = false;
         } else {
-            if (backgroundMesh.name == "Panorama") {
-                backgroundMesh.material.mainTexture = Resources.Load<Texture2D> (Player.Data.panoramaTexture);
-            } else if (backgroundMesh.name == "Flat") {
-                backgroundMesh.material.mainTexture = Resources.Load<Texture2D> (Player.Data.flatTexture);
+            if (meshName == "Panorama") {
+                backgroundMesh = HierarchyManager.Find ("Panorama").GetComponent<MeshRenderer> ();
+            } else if (meshName == "Flat") {
+                backgroundMesh = HierarchyManager.Find ("Flat").GetComponent<MeshRenderer> ();
             }
+
+            backgroundMesh.material.mainTexture = Resources.Load<Texture2D> (Player.Data.backgroundTexture);
+            CalculateViewBounds ();
         }
     }
 

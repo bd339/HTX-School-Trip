@@ -286,9 +286,22 @@ class CooperScript : MonoBehaviour {
                 Player.Data.location = i.Current;
             } else if (cmdName.Equals ("panorama")) {
                 i.MoveNext ();
-                var tex = Resources.Load<Texture2D> (i.Current);
-                HierarchyManager.Find ("Hopefully").GetComponent<MeshRenderer> ().material.mainTexture = tex;
-                Player.Data.panoramaTexture = i.Current;
+                if (!HierarchyManager.Find ("Panorama").activeInHierarchy) {
+                    HierarchyManager.Find ("Flat").SetActive (false);
+                    HierarchyManager.Find ("Panorama").SetActive (true);
+                }
+
+                InvestigationControls.Controls.BackgroundMesh = HierarchyManager.Find ("Panorama").GetComponent<MeshRenderer> ();
+                InvestigationControls.Controls.BackgroundTex = Resources.Load<Texture2D> (i.Current);
+            } else if (cmdName == "flat") {
+                i.MoveNext ();
+                if (!HierarchyManager.Find ("Flat").activeInHierarchy) {
+                    HierarchyManager.Find ("Panorama").SetActive (false);
+                    HierarchyManager.Find ("Flat").SetActive (true);
+                }
+
+                InvestigationControls.Controls.BackgroundMesh = HierarchyManager.Find ("Flat").GetComponent<MeshRenderer> ();
+                InvestigationControls.Controls.BackgroundTex = Resources.Load<Texture2D> (i.Current);
             } else if (cmdName.StartsWith ("sprite")) {
                 i.MoveNext ();
                 var oldName = i.Current;
@@ -315,18 +328,8 @@ class CooperScript : MonoBehaviour {
                     var x = float.Parse (i.Current);
                     uiSprite.rectTransform.anchoredPosition = new Vector2 (x, uiSprite.rectTransform.anchoredPosition.y);
                 } else if (cmdName.EndsWith ("i")) {
-                    var copy = Instantiate (uiSprite);
-                    uiSprite.name = uiSprite.name + "_old_to_delete";
-                    copy.gameObject.SetParent (HierarchyManager.Find ("Characters"));
-                    copy.color = Color.clear;
-                    copy.name = oldName;
                     i.MoveNext ();
-                    copy.sprite = Resources.Load<Sprite> (i.Current);
-                    Player.Data.spriteMap.Remove (oldName);
-                    Player.Data.spriteMap.Add (oldName, copy.sprite.name);
-
-                    StartCoroutine (FadeOutSprite (uiSprite, 0.25f));
-                    StartCoroutine (FadeInSprite (copy, 0.25f));
+                    uiSprite.sprite = Resources.Load<Sprite> (i.Current);
                 }
             } else if (cmdName.Equals ("set flag")) {
                 i.MoveNext ();

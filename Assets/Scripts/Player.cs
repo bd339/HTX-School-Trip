@@ -46,8 +46,7 @@ class Player : MonoBehaviour {
 
     public string location = "Unknown";
 
-    public string panoramaTexture = "";
-    public string flatTexture = "";
+    public string backgroundTexture = "";
 
     public Dictionary<string, string> spriteMap = new Dictionary<string, string> ();
 
