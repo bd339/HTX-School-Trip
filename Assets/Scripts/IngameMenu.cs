@@ -63,6 +63,14 @@ class IngameMenu : MonoBehaviour {
         foreach (Hotspot h in HierarchyManager.FindObjectsOfType<Hotspot> ()) {
             h.gameObject.SetActive (!Player.Data.gamePaused);
         }
+
+        if (Player.Data.gamePaused) {
+            HierarchyManager.Find ("BG Music").GetComponent<AudioSource> ().Pause ();
+            HierarchyManager.Find ("Sound Effects").GetComponent<AudioSource> ().Pause ();
+        } else {
+            HierarchyManager.Find ("BG Music").GetComponent<AudioSource> ().UnPause ();
+            HierarchyManager.Find ("Sound Effects").GetComponent<AudioSource> ().UnPause ();
+        }
     }
 
     public void GoToMainMenu () {
