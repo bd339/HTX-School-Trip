@@ -10,7 +10,7 @@ class NPC : Hotspot {
         }
 
         CooperScript.Engine.stalled = true;
-        CooperScript.Engine.AddSecondaryScript (onClickScript);
+        CooperScript.Engine.AddSecondaryScript (this);
 
         InvestigationControls.Controls.LeaveInvestigationMode ();
         ScrollIndicator.Indicators.LeaveInvestigationMode ();

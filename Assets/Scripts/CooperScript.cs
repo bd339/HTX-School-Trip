@@ -44,6 +44,7 @@ class CooperScript : MonoBehaviour {
     private int secondaryStateId;
     private int secondaryCommandIndex;
     private Dictionary<int, State> secondaryStates;
+    private Hotspot secondaryScriptProvider;
 
     public int StateId {
         get {
@@ -81,10 +82,10 @@ class CooperScript : MonoBehaviour {
     // Use this for initialization
     void Start () {
         enabled = false;
-        StartCoroutine (AddPrimaryScript ());
+        StartCoroutine (Init ());
     }
 
-    private IEnumerator AddPrimaryScript () {
+    private IEnumerator Init () {
         yield return new WaitWhile (() => LevelSerializer.IsDeserializing);
 
         var newScript = AddScript (mainScriptFile.text);
@@ -94,6 +95,13 @@ class CooperScript : MonoBehaviour {
             primaryCommandIndex = 0;
             UpdateHotspots ();
         } else {
+            // reload the secondary script in case the game was saved during e.g. dialogue
+            if (secondaryStates != null) {
+                var reloadedScript = AddScript (secondaryScriptProvider.onClickScript);
+                secondaryStates = reloadedScript.states;
+            }
+
+            // put sprites back on the loaded characters
             foreach (Transform sprite in HierarchyManager.Find ("Characters").transform) {
                 string spriteName;
                 if (Player.Data.spriteMap.TryGetValue (sprite.gameObject.name, out spriteName)) {
@@ -150,11 +158,12 @@ class CooperScript : MonoBehaviour {
         return newScript;
     }
 
-    public void AddSecondaryScript (string script) {
-        var newScript = AddScript (script);
+    public void AddSecondaryScript (Hotspot provider) {
+        var newScript = AddScript (provider.onClickScript);
         secondaryStateId = newScript.initialStateId;
         secondaryCommandIndex = 0;
         secondaryStates = newScript.states;
+        secondaryScriptProvider = provider;
     }
 
     // Update is called once per frame
