@@ -109,6 +109,9 @@ class CooperScript : MonoBehaviour {
                     sprite.GetComponent<Image> ().sprite = Resources.Load<Sprite> (spriteName);
                 }
             }
+
+            //put UI background back on
+            HierarchyManager.Find ("Background", HierarchyManager.Find ("Dialogue UI").transform).GetComponent<Image> ().sprite = Resources.Load<Sprite> (Player.Data.backgroundSprite);
         }
 
         // loading a save game after script changes is very likely to break this
@@ -394,6 +397,14 @@ class CooperScript : MonoBehaviour {
                 } else if (cmdName.EndsWith ("stop")) {
                     HierarchyManager.Find ("Sound Effects").GetComponent<AudioSource> ().Stop ();
                 }
+            } else if (cmdName == "background") {
+                var bgImage = HierarchyManager.Find ("Background", HierarchyManager.Find ("Dialogue UI").transform).GetComponent<Image> ();
+                bgImage.enabled = true;
+
+                i.MoveNext ();
+                bgImage.sprite = Resources.Load<Sprite> (i.Current);
+
+                Player.Data.backgroundSprite = i.Current;
             }
         } else if (command.StartsWith ("%")) {
             stalled = true;

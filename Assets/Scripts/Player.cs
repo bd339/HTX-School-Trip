@@ -49,6 +49,7 @@ class Player : MonoBehaviour {
     public string backgroundTexture = "";
 
     public Dictionary<string, string> spriteMap = new Dictionary<string, string> ();
+    public string backgroundSprite = "";
 
     public List<string> flags = new List<string> ();
 }
