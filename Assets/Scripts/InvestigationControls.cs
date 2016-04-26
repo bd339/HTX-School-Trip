@@ -157,6 +157,11 @@ class InvestigationControls : MonoBehaviour {
             ScrollIndicator.Indicators.Left = false;
             ScrollIndicator.Indicators.Right = false;
         }
+
+        if (Input.GetKeyDown (KeyCode.M)) {
+            // open map
+            Debug.Log ("map");
+        }
     }
 
     void LateUpdate () {

@@ -48,6 +48,8 @@ class Player : MonoBehaviour {
 
     public string backgroundTexture = "";
 
+    public string backgroundMusic = "";
+
     public Dictionary<string, string> spriteMap = new Dictionary<string, string> ();
     public string backgroundSprite = "";
 

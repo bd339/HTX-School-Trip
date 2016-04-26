@@ -110,8 +110,11 @@ class CooperScript : MonoBehaviour {
                 }
             }
 
-            //put UI background back on
+            // put UI background back on
             HierarchyManager.Find ("Background", HierarchyManager.Find ("Dialogue UI").transform).GetComponent<Image> ().sprite = Resources.Load<Sprite> (Player.Data.backgroundSprite);
+
+            // put music back on
+            HierarchyManager.Find ("BG Music").GetComponent<AudioSource> ().clip = Resources.Load<AudioClip> (Player.Data.backgroundMusic);
         }
 
         // loading a save game after script changes is very likely to break this
@@ -379,6 +382,8 @@ class CooperScript : MonoBehaviour {
                     var music = Resources.Load<AudioClip> (i.Current);
                     HierarchyManager.Find ("BG Music").GetComponent<AudioSource> ().clip = music;
                     HierarchyManager.Find ("BG Music").GetComponent<AudioSource> ().Play ();
+
+                    Player.Data.backgroundMusic = i.Current;
                 } else if (cmdName.EndsWith ("stop")) {
                     HierarchyManager.Find ("BG Music").GetComponent<AudioSource> ().Stop ();
                 } else if (cmdName.EndsWith ("snap")) {
