@@ -12,18 +12,17 @@ class NPC : Hotspot {
         CooperScript.Engine.stalled = true;
         CooperScript.Engine.AddSecondaryScript (this);
 
-        InvestigationControls.Controls.LeaveInvestigationMode ();
-        ScrollIndicator.Indicators.LeaveInvestigationMode ();
-        Dialogue.ChatboxDialogue.LeaveDialogueMode ();
-        // leave court mode
-
         StartCoroutine (RunScript ());
     }
 
     private System.Collections.IEnumerator RunScript () {
         yield return new WaitWhile (() => Camera.main.GetComponent<InvestigationControls> ().HasTarget);
-
         CooperScript.Engine.stalled = false;
+
+        InvestigationControls.Controls.LeaveInvestigationMode ();
+        Dialogue.ChatboxDialogue.LeaveDialogueMode ();
+        // leave court mode
+
         base.OnMouseDown ();
     }
 }

@@ -1,18 +1,15 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.Audio;
 
 using System.Linq;
 using System.Collections;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
-using UnityEngine.Audio;
 
-[SerializeAll]
 class CooperScript : MonoBehaviour {
 
-    [DoNotSerialize]
     private static CooperScript engine;
-    [DoNotSerialize]
     public static CooperScript Engine {
         get {
             if (engine == null) {
@@ -23,7 +20,8 @@ class CooperScript : MonoBehaviour {
         }
     }
 
-    [DoNotSerialize]
+    public bool gamePaused;
+
     public TextAsset mainScriptFile;
 
     public bool stalled;
@@ -45,7 +43,6 @@ class CooperScript : MonoBehaviour {
     private int secondaryStateId;
     private int secondaryCommandIndex;
     private Dictionary<int, State> secondaryStates;
-    private Hotspot secondaryScriptProvider;
 
     public int StateId {
         get {
@@ -80,47 +77,16 @@ class CooperScript : MonoBehaviour {
         }
     }
 
+    private List<Image> fadingSprites = new List<Image> ();
+
     // Use this for initialization
     void Start () {
-        enabled = false;
-        StartCoroutine (Init ());
-    }
-
-    private IEnumerator Init () {
-        yield return new WaitWhile (() => LevelSerializer.IsDeserializing);
-
         var newScript = AddScript (mainScriptFile.text);
-
-        if (!Player.Data.wasDeserialized) {
-            primaryStateId = newScript.initialStateId;
-            primaryCommandIndex = 0;
-            UpdateHotspots ();
-        } else {
-            // reload the secondary script in case the game was saved during e.g. dialogue
-            if (secondaryStates != null) {
-                var reloadedScript = AddScript (secondaryScriptProvider.onClickScript);
-                secondaryStates = reloadedScript.states;
-            }
-
-            // put sprites back on the loaded characters
-            foreach (Transform sprite in HierarchyManager.Find ("Characters").transform) {
-                string spriteName;
-                if (Player.Data.spriteMap.TryGetValue (sprite.gameObject.name, out spriteName)) {
-                    sprite.GetComponent<Image> ().sprite = Resources.Load<Sprite> (spriteName);
-                }
-            }
-
-            // put UI background back on
-            HierarchyManager.Find ("Background", HierarchyManager.Find ("Dialogue UI").transform).GetComponent<Image> ().sprite = Resources.Load<Sprite> (Player.Data.backgroundSprite);
-
-            // put music back on
-            HierarchyManager.Find ("BG Music").GetComponent<AudioSource> ().clip = Resources.Load<AudioClip> (Player.Data.backgroundMusic);
-        }
-
-        // loading a save game after script changes is very likely to break this
+        primaryStateId = newScript.initialStateId;
+        primaryCommandIndex = 0;
         primaryStates = newScript.states;
 
-        enabled = true;
+        UpdateHotspots ();
     }
 
     private Script AddScript (string script) {
@@ -144,7 +110,7 @@ class CooperScript : MonoBehaviour {
                     // dummy command to ensure that all states have at least 1 command
                     newCommands.Add ("'dummy'");
 
-                    newState.nameplate = sr.ReadLine ().Replace ("$PlayerName", LevelSerializer.PlayerName);
+                    newState.nameplate = sr.ReadLine ().Replace ("$PlayerName", PlayerPrefs.GetString ("PlayerName"));
 
                     while (sr.Peek () != '\\' && sr.Peek () != -1) {
                         var command = sr.ReadLine ();
@@ -170,12 +136,11 @@ class CooperScript : MonoBehaviour {
         secondaryStateId = newScript.initialStateId;
         secondaryCommandIndex = 0;
         secondaryStates = newScript.states;
-        secondaryScriptProvider = provider;
     }
 
     // Update is called once per frame
     void Update () {
-        if (Player.Data.gamePaused || stalled || LevelSerializer.IsDeserializing) {
+        if (gamePaused || stalled) {
             return;
         }
 
@@ -191,39 +156,37 @@ class CooperScript : MonoBehaviour {
             i.MoveNext ();
             cmdName = i.Current;
 
-            if (cmdName.Equals ("wait")) {
-                i.MoveNext ();
-                stalled = true;
-                StartCoroutine ("StallForSeconds", float.Parse (i.Current));
-            } else if (cmdName.Equals ("mode")) {
+            if (cmdName == "wait") {
                 i.MoveNext ();
 
-                if (i.Current.Equals ("investigation")) {
+                stalled = true;
+                StartCoroutine ("StallForSeconds", float.Parse (i.Current));
+            } else if (cmdName == "mode") {
+                i.MoveNext ();
+
+                if (i.Current == "investigation") {
                     Dialogue.ChatboxDialogue.LeaveDialogueMode ();
                     // leave court mode
                     InvestigationControls.Controls.EnterInvestigationMode ();
-                    ScrollIndicator.Indicators.EnterInvestigationMode ();
-                } else if (i.Current.Equals ("dialogue")) {
+                } else if (i.Current == "dialogue") {
                     InvestigationControls.Controls.LeaveInvestigationMode ();
-                    ScrollIndicator.Indicators.LeaveInvestigationMode ();
                     // leave court mode
                     Dialogue.ChatboxDialogue.EnterDialogueMode ();
-                } else if (i.Current.Equals ("court")) {
+                } else if (i.Current == "court") {
                     InvestigationControls.Controls.LeaveInvestigationMode ();
-                    ScrollIndicator.Indicators.LeaveInvestigationMode ();
                     Dialogue.ChatboxDialogue.LeaveDialogueMode ();
                     // enter court mode
                 } else {
                     InvestigationControls.Controls.LeaveInvestigationMode ();
-                    ScrollIndicator.Indicators.LeaveInvestigationMode ();
                     Dialogue.ChatboxDialogue.LeaveDialogueMode ();
                     // leave court mode
                 }
-            } else if (cmdName.Equals ("state")) {
+            } else if (cmdName == "state") {
                 i.MoveNext ();
+
                 CommandIndex = -1;
                 StateId = int.Parse (i.Current);
-            } else if (cmdName.Equals ("global state")) {
+            } else if (cmdName == "global state") {
                 i.MoveNext ();
 
                 if (secondaryStates == null) {
@@ -234,10 +197,11 @@ class CooperScript : MonoBehaviour {
 
                 primaryStateId = int.Parse (i.Current);
                 UpdateHotspots ();
-            } else if (cmdName.Equals ("fade in")) {
+            } else if (cmdName == "fade in") {
                 i.MoveNext ();
                 var spriteName = i.Current;
                 var uiSprite = HierarchyManager.Find (spriteName, HierarchyManager.Find ("Characters").transform);
+
                 if (uiSprite != null) {
                     if (i.MoveNext ()) {
                         StartCoroutine (FadeInSprite (uiSprite.GetComponent<Image> (), float.Parse (i.Current)));
@@ -254,17 +218,15 @@ class CooperScript : MonoBehaviour {
                             StartCoroutine (FadeInSprite (uiSprite.GetComponent<Image> ()));
                         }
                     } else {
-                        var prefab = Resources.Load<Image> (spriteName);
+                        var prefab = ResourceManager.Load<Image> (spriteName);
                         if (prefab == null) {
                             Debug.Log ("There's no way to fade in " + spriteName);
                             return;
                         }
+
                         var go = Instantiate (prefab);
                         go.name = spriteName;
-                        go.gameObject.SetParent (HierarchyManager.Find ("Characters"));
-
-                        Player.Data.spriteMap.Remove (go.name);
-                        Player.Data.spriteMap.Add (go.name, prefab.sprite.name);
+                        go.transform.SetParent (HierarchyManager.Find ("Characters").transform, false);
 
                         if (i.MoveNext ()) {
                             StartCoroutine (FadeInSprite (go, float.Parse (i.Current)));
@@ -273,10 +235,11 @@ class CooperScript : MonoBehaviour {
                         }
                     }
                 }
-            } else if (cmdName.Equals ("fade out")) {
+            } else if (cmdName == "fade out") {
                 i.MoveNext ();
                 var spriteName = i.Current;
                 var uiSprite = HierarchyManager.Find (spriteName, HierarchyManager.Find("Characters").transform);
+
                 if (uiSprite != null) {
                     if (i.MoveNext ()) {
                         StartCoroutine (FadeOutSprite (uiSprite.GetComponent<Image> (), float.Parse (i.Current)));
@@ -291,82 +254,88 @@ class CooperScript : MonoBehaviour {
                         StartCoroutine (FadeOutSprite (uiSprite.GetComponent<Image> ()));
                     }
                 }
-            } else if (cmdName.Equals ("text color")) {
+            } else if (cmdName == "text color") {
                 i.MoveNext ();
                 Dialogue.ChatboxDialogue.DialogueColor = i.Current;
-            } else if (cmdName.Equals ("text delay")) {
+            } else if (cmdName == "text delay") {
                 i.MoveNext ();
                 Dialogue.ChatboxDialogue.dialogueDelay = float.Parse (i.Current);
-            } else if (cmdName.Equals ("location")) {
+            } else if (cmdName == "panorama") {
                 i.MoveNext ();
-                Player.Data.location = i.Current;
-            } else if (cmdName.Equals ("panorama")) {
-                i.MoveNext ();
+
                 if (!HierarchyManager.Find ("Panorama").activeInHierarchy) {
                     HierarchyManager.Find ("Flat").SetActive (false);
                     HierarchyManager.Find ("Panorama").SetActive (true);
                 }
 
                 InvestigationControls.Controls.BackgroundMesh = HierarchyManager.Find ("Panorama").GetComponent<MeshRenderer> ();
-                InvestigationControls.Controls.BackgroundTex = Resources.Load<Texture2D> (i.Current);
+                InvestigationControls.Controls.BackgroundTex = ResourceManager.Load<Texture2D> (i.Current);
             } else if (cmdName == "flat") {
                 i.MoveNext ();
+
                 if (!HierarchyManager.Find ("Flat").activeInHierarchy) {
                     HierarchyManager.Find ("Panorama").SetActive (false);
                     HierarchyManager.Find ("Flat").SetActive (true);
                 }
 
                 InvestigationControls.Controls.BackgroundMesh = HierarchyManager.Find ("Flat").GetComponent<MeshRenderer> ();
-                InvestigationControls.Controls.BackgroundTex = Resources.Load<Texture2D> (i.Current);
+                InvestigationControls.Controls.BackgroundTex = ResourceManager.Load<Texture2D> (i.Current);
             } else if (cmdName.StartsWith ("sprite")) {
                 i.MoveNext ();
                 var oldName = i.Current;
 
                 Image uiSprite;
                 var spriteObj = HierarchyManager.Find (i.Current, HierarchyManager.Find ("Characters").transform);
+
                 if (spriteObj == null) {
-                    var prefab = Resources.Load<Image> (oldName);
-                    if (prefab == null) {
-                        Debug.Log ("Cannot create " + oldName);
-                        return;
+                    spriteObj = HierarchyManager.Find (i.Current);
+
+                    if (spriteObj == null) {
+                        var prefab = ResourceManager.Load<Image> (oldName);
+                        if (prefab == null) {
+                            Debug.Log ("Cannot create " + oldName);
+                            return;
+                        }
+
+                        var go = Instantiate (prefab);
+                        go.transform.SetParent (HierarchyManager.Find ("Characters").transform, false);
+
+                        i.MoveNext ();
+                        uiSprite = ResourceManager.Load<Image> (i.Current);
+                    } else {
+                        uiSprite = spriteObj.GetComponent<Image> ();
                     }
-                    var go = Instantiate (prefab);
-                    go.name = oldName;
-                    go.gameObject.SetParent (HierarchyManager.Find ("Characters"));
-                    i.MoveNext ();
-                    uiSprite = Resources.Load<Image> (i.Current);
                 } else {
                     uiSprite = spriteObj.GetComponent<Image> ();
                 }
 
                 if (cmdName.EndsWith ("x")) {
                     i.MoveNext ();
+
                     var x = float.Parse (i.Current);
                     uiSprite.rectTransform.anchoredPosition = new Vector2 (x, uiSprite.rectTransform.anchoredPosition.y);
                 } else if (cmdName.EndsWith ("i")) {
                     i.MoveNext ();
-                    uiSprite.sprite = Resources.Load<Sprite> (i.Current);
+                    uiSprite.sprite = ResourceManager.Load<Sprite> (i.Current);
                 }
-            } else if (cmdName.Equals ("set flag")) {
+            } else if (cmdName == "set flag") {
                 i.MoveNext ();
+                PlayerPrefs.SetInt (i.Current, 1);
 
-                if (!Player.Data.flags.Contains(i.Current)) {
-                    Player.Data.flags.Add (i.Current);
-
-                    foreach (var item in HierarchyManager.FindObjectsOfType<InventoryItem> ()) {
-                        if (item.flag == i.Current) {
-                            item.GetComponent<Image> ().enabled = true;
-                        }
+                foreach (var item in HierarchyManager.FindObjectsOfType<InventoryItem> ()) {
+                    if (item.flag == i.Current) {
+                        item.GetComponent<Image> ().enabled = true;
                     }
                 }
-            } else if (cmdName.Equals ("has flag")) {
+            } else if (cmdName == "has flag") {
                 i.MoveNext ();
-                if (Player.Data.flags.Contains (i.Current)) {
+
+                if (PlayerPrefs.HasKey (i.Current)) {
                     i.MoveNext ();
                     CommandIndex = -1;
                     StateId = int.Parse (i.Current);
                 }
-            } else if (cmdName.Equals ("unset flag")) {
+            } else if (cmdName == "unset flag") {
                 i.MoveNext ();
 
                 foreach (var item in HierarchyManager.FindObjectsOfType<InventoryItem> ()) {
@@ -375,15 +344,14 @@ class CooperScript : MonoBehaviour {
                     }
                 }
 
-                Player.Data.flags.Remove (i.Current);
+                PlayerPrefs.DeleteKey (i.Current);
             } else if (cmdName.StartsWith ("music")) {
                 if (cmdName.EndsWith ("start")) {
                     i.MoveNext ();
-                    var music = Resources.Load<AudioClip> (i.Current);
+
+                    var music = ResourceManager.Load<AudioClip> (i.Current);
                     HierarchyManager.Find ("BG Music").GetComponent<AudioSource> ().clip = music;
                     HierarchyManager.Find ("BG Music").GetComponent<AudioSource> ().Play ();
-
-                    Player.Data.backgroundMusic = i.Current;
                 } else if (cmdName.EndsWith ("stop")) {
                     HierarchyManager.Find ("BG Music").GetComponent<AudioSource> ().Stop ();
                 } else if (cmdName.EndsWith ("snap")) {
@@ -396,20 +364,16 @@ class CooperScript : MonoBehaviour {
             } else if (cmdName.StartsWith ("audio")) {
                 if (cmdName.EndsWith ("start")) {
                     i.MoveNext ();
-                    var audio = Resources.Load<AudioClip> (i.Current);
+
+                    var audio = ResourceManager.Load<AudioClip> (i.Current);
                     HierarchyManager.Find ("Sound Effects").GetComponent<AudioSource> ().clip = audio;
                     HierarchyManager.Find ("Sound Effects").GetComponent<AudioSource> ().Play ();
                 } else if (cmdName.EndsWith ("stop")) {
                     HierarchyManager.Find ("Sound Effects").GetComponent<AudioSource> ().Stop ();
                 }
-            } else if (cmdName == "background") {
-                var bgImage = HierarchyManager.Find ("Background", HierarchyManager.Find ("Dialogue UI").transform).GetComponent<Image> ();
-                bgImage.enabled = true;
-
+            } else if (cmdName == "flip") {
                 i.MoveNext ();
-                bgImage.sprite = Resources.Load<Sprite> (i.Current);
-
-                Player.Data.backgroundSprite = i.Current;
+                HierarchyManager.Find (i.Current).GetComponent<Image> ().transform.Rotate (0, 180, 0);
             }
         } else if (command.StartsWith ("%")) {
             stalled = true;
@@ -448,14 +412,13 @@ class CooperScript : MonoBehaviour {
         }
 
         if (cmdName != null) {
-            if (cmdName.Equals ("return")) {
+            if (cmdName == "return") {
                 secondaryStates = null;
                 UpdateHotspots ();
 
                 Dialogue.ChatboxDialogue.LeaveDialogueMode ();
                 // leave court mode
                 InvestigationControls.Controls.EnterInvestigationMode ();
-                ScrollIndicator.Indicators.EnterInvestigationMode ();
 
                 foreach (Transform sprite in HierarchyManager.Find ("Characters").transform) {
                     Destroy (sprite.gameObject);
@@ -476,40 +439,58 @@ class CooperScript : MonoBehaviour {
         }
     }
 
-    private IEnumerator FadeInSprite (Image sprite, float duration = 0.25f) {
+    private IEnumerator FadeInSprite (Image sprite, float duration = 0) {
+        if (fadingSprites.Contains (sprite)) {
+            StopCoroutine ("FadeOutSprite");
+            fadingSprites.Remove (sprite);
+        }
+
+        fadingSprites.Add (sprite);
+
         sprite.enabled = true;
 
         if (duration == 0) {
             sprite.color = new Color (1f, 1f, 1f, 1f);
+
+            fadingSprites.Remove (sprite);
             yield break;
         }
 
         var initialAlpha = sprite.color.a;
         float startTime = Time.time;
         while (sprite != null && sprite.color.a < 1f) {
-            if (Player.Data.gamePaused) {
-                sprite.color = new Color (1f, 1f, 1f, 1f);
-                break;
+            if (gamePaused) {
+                yield return null;
             }
 
             sprite.color = new Color (1f, 1f, 1f, Mathf.SmoothStep (initialAlpha, 1, (Time.time - startTime) / duration));
             yield return null;
         }
+
+        fadingSprites.Remove (sprite);
     }
 
-    private IEnumerator FadeOutSprite (Image sprite, float duration = 0.25f) {
+    private IEnumerator FadeOutSprite (Image sprite, float duration = 0) {
+        if (fadingSprites.Contains (sprite)) {
+            StopCoroutine ("FadeInSprite");
+            fadingSprites.Remove (sprite);
+        }
+
+        fadingSprites.Add (sprite);
+
         if (duration == 0) {
             sprite.color = new Color (1f, 1f, 1f, 0f);
             sprite.enabled = false;
+
+            fadingSprites.Remove (sprite);
             yield break;
         }
 
         var initialAlpha = sprite.color.a;
         float startTime = Time.time;
         while (sprite != null && sprite.color.a > 0f) {
-            if (Player.Data.gamePaused) {
-                sprite.color = new Color (1f, 1f, 1f, 0f);
-                break;
+            if (gamePaused) {
+                yield return null;
             }
 
             sprite.color = new Color (1f, 1f, 1f, Mathf.SmoothStep (initialAlpha, 0, (Time.time - startTime) / duration));
@@ -519,13 +500,15 @@ class CooperScript : MonoBehaviour {
         if (sprite != null) {
             sprite.enabled = false;
         }
+
+        fadingSprites.Remove (sprite);
     }
 
     private IEnumerator StallForSeconds (float stallTime) {
         float startTime = Time.time;
         while (Time.time - startTime < stallTime) {
-            if (Player.Data.gamePaused) {
-                break;
+            if (gamePaused) {
+                yield return null;
             }
 
             yield return null;

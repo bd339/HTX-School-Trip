@@ -5,12 +5,9 @@ using System.Linq;
 using System.Collections;
 using System.Collections.Generic;
 
-[SerializeAll]
 class Dialogue : MonoBehaviour {
 
-    [DoNotSerialize]
     private static Dialogue dialogue;
-    [DoNotSerialize]
     public static Dialogue ChatboxDialogue {
         get {
             if (dialogue == null) {
@@ -21,13 +18,19 @@ class Dialogue : MonoBehaviour {
         }
     }
 
+    private Text Content {
+        get {
+            return HierarchyManager.Find ("Content", transform).GetComponent<Text> ();
+        }
+    }
+
     public float dialogueDelay = 0.05f;
 
     public string DialogueColor {
         set {
             Color newColor;
             if (ColorUtility.TryParseHtmlString (value, out newColor)) {
-                chatboxContent.color = newColor;
+                Content.color = newColor;
             }
         }
     }
@@ -41,11 +44,10 @@ class Dialogue : MonoBehaviour {
     private int dialogueIndex;
     private int dialogueLength;
     private string dialogueLine;
-    [DoNotSerialize]
     private float lastDialogueUpdate;
     public string DialogueLine {
         set {
-            chatboxContent.text = "";
+            Content.text = "";
 
             dialogueIndex = 0;
             dialogueLength = value.Length - value.Count (c => c == '}');
@@ -56,7 +58,7 @@ class Dialogue : MonoBehaviour {
 
     public string Question {
         set {
-            chatboxContent.text = value;
+            Content.text = value;
         }
     }
 
@@ -75,7 +77,7 @@ class Dialogue : MonoBehaviour {
 
             foreach (var item in value.AsEnumerable ()) {
                 var go = Instantiate (prefab);
-                go.SetParent (chatboxContent.gameObject);
+                go.transform.SetParent (Content.transform, false);
                 go.GetComponent<RectTransform> ().anchoredPosition -= new Vector2 (0, 30 * origAnswers.Count);
                 answers.Add (go.GetComponent<Text> ());
 
@@ -85,34 +87,20 @@ class Dialogue : MonoBehaviour {
         }
     }
 
-    [DoNotSerialize]
-    private Text chatboxContent;
-
     // Use this for initialization
     void Start () {
-        chatboxContent = HierarchyManager.Find ("Content", transform).GetComponent<Text> ();
-        StartCoroutine (DisableDialogueUI ());
-    }
-
-    private IEnumerator DisableDialogueUI () {
-        yield return new WaitWhile (() => LevelSerializer.IsDeserializing);
-
-        if (!Player.Data.wasDeserialized) {
-            HierarchyManager.Find ("Chatbox").GetComponent<RectTransform> ().anchoredPosition = new Vector2 (0, -300);
-            gameObject.SetActive (false);
-        }
     }
     
     // Update is called once per frame
     void Update () {
-        if (Player.Data.gamePaused || LevelSerializer.IsDeserializing) {
+        if (CooperScript.Engine.gamePaused) {
             return;
         }
 
         Cursor.lockState = CursorLockMode.None;
 
         if (dialogueLine != null) {
-            if (chatboxContent.text.Length == dialogueLength) {
+            if (Content.text.Length == dialogueLength) {
                 if (Input.GetKeyDown (KeyCode.Space) ||
                     Input.GetKeyDown (KeyCode.Return)||
                     Input.GetKeyDown (KeyCode.RightArrow)||
@@ -142,7 +130,7 @@ class Dialogue : MonoBehaviour {
                     var indicator = HierarchyManager.Find ("Next Indicator").GetComponent<Image> ();
                     if (!indicator.gameObject.activeInHierarchy) {
                         indicator.gameObject.SetActive (true);
-                        float numLines = chatboxContent.preferredWidth / 1120f;
+                        float numLines = Content.preferredWidth / 1120f;
                         float x = (numLines - Mathf.Floor (numLines)) * 1120f + 0.15f * 100 + Mathf.Floor (numLines) * 10f;
                         float y = -Mathf.Floor (numLines) * 20f - 10f;
                         indicator.rectTransform.anchoredPosition = new Vector2 (x, y);
@@ -158,14 +146,14 @@ class Dialogue : MonoBehaviour {
                     int newIndex = rem.IndexOf ('}');
 
                     if (newIndex == -1) {
-                        chatboxContent.text += rem;
+                        Content.text += rem;
                     } else {
-                        chatboxContent.text += rem.Substring (0, newIndex);
+                        Content.text += rem.Substring (0, newIndex);
                         dialogueIndex += rem.Substring (0, newIndex).Length;
                     }
                 } else if (Time.time - lastDialogueUpdate >= dialogueDelay) {
                     lastDialogueUpdate = Time.time;
-                    chatboxContent.text += dialogueLine [dialogueIndex];
+                    Content.text += dialogueLine [dialogueIndex];
                     dialogueIndex++;
                 }
             }
@@ -185,10 +173,10 @@ class Dialogue : MonoBehaviour {
                 Input.GetKeyDown (KeyCode.RightArrow) ||
                 Input.GetMouseButtonDown (0)) {
 
-                chatboxContent.text = "";
+                Content.text = "";
 
                 foreach (Text answer in answers) {
-                    Destroy (answer);
+                    Destroy (answer.gameObject);
                 }
 
                 CooperScript.Engine.CommandIndex = 0;
@@ -215,11 +203,12 @@ class Dialogue : MonoBehaviour {
 
     private IEnumerator HideDialogueUI () {
         var rect = HierarchyManager.Find ("Chatbox").GetComponent<RectTransform> ();
+
         var startTime = Time.time;
 
         while (rect.anchoredPosition.y > -300) {
-            if (Player.Data.gamePaused) {
-                rect.anchoredPosition = new Vector2 (0, -300);
+            if (CooperScript.Engine.gamePaused) {
+                yield return null;
             } else {
                 rect.anchoredPosition = new Vector2 (0, Mathf.SmoothStep (20, -300, (Time.time - startTime) / 0.125f));
                 yield return null;
@@ -230,13 +219,13 @@ class Dialogue : MonoBehaviour {
     }
 
     private IEnumerator ShowDialogueUI () {
-        chatboxContent.text = "";
         var rect = HierarchyManager.Find ("Chatbox").GetComponent<RectTransform> ();
+
         var startTime = Time.time;
 
         while (rect.anchoredPosition.y < 20) {
-            if (Player.Data.gamePaused) {
-                rect.anchoredPosition = new Vector2 (0, 20);
+            if (CooperScript.Engine.gamePaused) {
+                yield return null;
             } else {
                 rect.anchoredPosition = new Vector2 (0, Mathf.SmoothStep (-300, 20, (Time.time - startTime) / 0.125f));
                 yield return null;
@@ -245,14 +234,14 @@ class Dialogue : MonoBehaviour {
     }
 
     public void EnterDialogueMode () {
-        StopAllCoroutines ();
+        StopCoroutine ("LeaveDialogueMode");
         gameObject.SetActive (true);
         StartCoroutine (ShowDialogueUI ());
     }
 
     public void LeaveDialogueMode () {
         if (gameObject.activeInHierarchy) {
-            StopAllCoroutines ();
+            StopCoroutine ("EnterDialogueMode");
             StartCoroutine (HideDialogueUI ());
         }
     }

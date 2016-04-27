@@ -15,7 +15,8 @@ class MapEntry : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler, IPoi
 	}
 
     public void OnPointerClick (PointerEventData eventData) {
-        HierarchyManager.Find ("Ingame Menu").GetComponent<IngameMenu> ().ToggleMapMenu ();
+        IngameMenu.Menu.ToggleMapMenu ();
+
         CooperScript.Engine.CommandIndex = 0;
         CooperScript.Engine.StateId = state;
     }

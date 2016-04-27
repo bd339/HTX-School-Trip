@@ -1,11 +1,8 @@
 ﻿using UnityEngine;
 
-[SerializeAll]
 class InvestigationControls : MonoBehaviour {
 
-    [DoNotSerialize]
     private static InvestigationControls controls;
-    [DoNotSerialize]
     public static InvestigationControls Controls {
         get {
             if (controls == null) {
@@ -16,24 +13,18 @@ class InvestigationControls : MonoBehaviour {
         }
     }
 
-    [DoNotSerialize]
     public Texture2D BackgroundTex {
         set {
             backgroundMesh.material.mainTexture = value;
             CalculateViewBounds ();
-            Player.Data.backgroundTexture = backgroundMesh.material.mainTexture.name;
         }
     }
-    [DoNotSerialize]
     private MeshRenderer backgroundMesh;
-    [DoNotSerialize]
     public MeshRenderer BackgroundMesh {
         set {
             backgroundMesh = value;
-            meshName = backgroundMesh.name;
         }
     }
-    private string meshName;
 
     private bool hasTarget;
     public bool HasTarget {
@@ -58,29 +49,6 @@ class InvestigationControls : MonoBehaviour {
 
     // Use this for initialization
     void Start () {
-        StartCoroutine (Init ());
-    }
-
-    private System.Collections.IEnumerator Init () {
-        yield return new WaitWhile (() => LevelSerializer.IsDeserializing);
-
-        if (!Player.Data.wasDeserialized) {
-            enabled = false;
-        } else {
-            Debug.Log (meshName);
-            if (meshName == "Panorama") {
-                HierarchyManager.Find ("Flat").SetActive (false);
-                HierarchyManager.Find ("Panorama").SetActive (true);
-                backgroundMesh = HierarchyManager.Find ("Panorama").GetComponent<MeshRenderer> ();
-            } else if (meshName == "Flat") {
-                HierarchyManager.Find ("Panorama").SetActive (false);
-                HierarchyManager.Find ("Flat").SetActive (true);
-                backgroundMesh = HierarchyManager.Find ("Flat").GetComponent<MeshRenderer> ();
-            }
-
-            backgroundMesh.material.mainTexture = Resources.Load<Texture2D> (Player.Data.backgroundTexture);
-            CalculateViewBounds ();
-        }
     }
 
     private void CalculateViewBounds () {
@@ -108,7 +76,7 @@ class InvestigationControls : MonoBehaviour {
 
     // Update is called once per frame
     void Update () {
-        if (Player.Data.gamePaused || LevelSerializer.IsDeserializing) {
+        if (CooperScript.Engine.gamePaused) {
             return;
         }
 
@@ -157,12 +125,6 @@ class InvestigationControls : MonoBehaviour {
             ScrollIndicator.Indicators.Left = false;
             ScrollIndicator.Indicators.Right = false;
         }
-
-        if (Input.GetKeyDown (KeyCode.M)) {
-            HierarchyManager.Find ("Ingame Menu").GetComponent<IngameMenu> ().ToggleMapMenu ();
-            LeaveInvestigationMode ();
-            ScrollIndicator.Indicators.LeaveInvestigationMode ();
-        }
     }
 
     void LateUpdate () {
@@ -205,9 +167,8 @@ class InvestigationControls : MonoBehaviour {
         Vector3 oldRot = transform.eulerAngles;
 
         while (transform.eulerAngles != q.eulerAngles) {
-            if (Player.Data.gamePaused) {
-                transform.eulerAngles = q.eulerAngles;
-                continue;
+            if (CooperScript.Engine.gamePaused) {
+                yield return null;
             }
 
             transform.rotation = Quaternion.RotateTowards (transform.rotation, q, 100f * Time.deltaTime);
@@ -226,9 +187,11 @@ class InvestigationControls : MonoBehaviour {
 
     public void EnterInvestigationMode () {
         enabled = true;
+        ScrollIndicator.Indicators.EnterInvestigationMode ();
     }
 
     public void LeaveInvestigationMode () {
         enabled = false;
+        ScrollIndicator.Indicators.LeaveInvestigationMode ();
     }
 }

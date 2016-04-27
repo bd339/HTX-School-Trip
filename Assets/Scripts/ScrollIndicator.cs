@@ -1,12 +1,9 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
 
-[SerializeAll]
 class ScrollIndicator : MonoBehaviour {
 
-    [DoNotSerialize]
     private static ScrollIndicator indicators;
-    [DoNotSerialize]
     public static ScrollIndicator Indicators {
         get {
             if (indicators == null) {
@@ -71,27 +68,15 @@ class ScrollIndicator : MonoBehaviour {
 
     // Use this for initialization
     void Start () {
-        enabled = false;
         upIndicator    = HierarchyManager.Find ("Up", transform).GetComponent<Image> ();
         downIndicator  = HierarchyManager.Find ("Down", transform).GetComponent<Image> ();
         leftIndicator  = HierarchyManager.Find ("Left", transform).GetComponent<Image> ();
         rightIndicator = HierarchyManager.Find ("Right", transform).GetComponent<Image> ();
-        StartCoroutine (Deactivate ());
-    }
-
-    private System.Collections.IEnumerator Deactivate () {
-        yield return new WaitWhile (() => LevelSerializer.IsDeserializing);
-
-        if (!Player.Data.wasDeserialized) {
-            gameObject.SetActive (false);
-        }
-
-        enabled = true;
     }
 
     // Update is called once per frame
     void Update () {
-        if (Player.Data.gamePaused || LevelSerializer.IsDeserializing) {
+        if (CooperScript.Engine.gamePaused) {
             return;
         }
 
