@@ -3,6 +3,17 @@ using UnityEngine.UI;
 
 class IngameMenu : MonoBehaviour {
 
+    private static IngameMenu menu;
+    public static IngameMenu Menu {
+        get {
+            if (menu == null) {
+                menu = HierarchyManager.FindObjectOfType<IngameMenu> ();
+            }
+
+            return menu;
+        }
+    }
+
     private bool startMusicOver;
 
     // Use this for initialization
@@ -63,6 +74,8 @@ class IngameMenu : MonoBehaviour {
         HierarchyManager.Find ("Inventory Button"  ).       SetActive (!HierarchyManager.Find ("Inventory Button"  ).       activeInHierarchy);
         HierarchyManager.Find ("Map Button"        ).       SetActive (!HierarchyManager.Find ("Map Button"        ).       activeInHierarchy);
 
+        HierarchyManager.Find ("Map Button").GetComponent<Button> ().interactable = InvestigationControls.Controls.enabled;
+
         Cursor.SetCursor (null, Vector2.zero, CursorMode.Auto);
 
         UpdateText ();
@@ -72,18 +85,14 @@ class IngameMenu : MonoBehaviour {
         }
 
         if (Player.Data.gamePaused) {
-            Debug.Log (HierarchyManager.Find ("BG Music").GetComponent<AudioSource> ().isPlaying);
             HierarchyManager.Find ("BG Music").GetComponent<AudioSource> ().Pause ();
-            Debug.Log (HierarchyManager.Find ("BG Music").GetComponent<AudioSource> ().isPlaying);
             HierarchyManager.Find ("Sound Effects").GetComponent<AudioSource> ().Pause ();
         } else {
             if (startMusicOver) {
                 HierarchyManager.Find ("BG Music").GetComponent<AudioSource> ().Play ();
                 startMusicOver = false;
             } else {
-                Debug.Log (HierarchyManager.Find ("BG Music").GetComponent<AudioSource> ().isPlaying);
                 HierarchyManager.Find ("BG Music").GetComponent<AudioSource> ().UnPause ();
-                Debug.Log (HierarchyManager.Find ("BG Music").GetComponent<AudioSource> ().isPlaying);
                 HierarchyManager.Find ("Sound Effects").GetComponent<AudioSource> ().UnPause ();
             }
         }
@@ -147,5 +156,12 @@ class IngameMenu : MonoBehaviour {
 
     public void ToggleMapMenu () {
         HierarchyManager.Find ("Map Menu").SetActive (!HierarchyManager.Find ("Map Menu").activeInHierarchy);
+        HierarchyManager.Find ("Resume Play Button").SetActive (!HierarchyManager.Find ("Resume Play Button").activeInHierarchy);
+        HierarchyManager.Find ("Main Menu Button").SetActive (!HierarchyManager.Find ("Main Menu Button").activeInHierarchy);
+        HierarchyManager.Find ("Save Button").SetActive (!HierarchyManager.Find ("Save Button").activeInHierarchy);
+        HierarchyManager.Find ("Load Menu Button").SetActive (!HierarchyManager.Find ("Load Menu Button").activeInHierarchy);
+        HierarchyManager.Find ("Remaining Save Slots Text").SetActive (!HierarchyManager.Find ("Remaining Save Slots Text").activeInHierarchy);
+        HierarchyManager.Find ("Inventory Button").SetActive (!HierarchyManager.Find ("Inventory Button").activeInHierarchy);
+        HierarchyManager.Find ("Map Button").SetActive (!HierarchyManager.Find ("Map Button").activeInHierarchy);
     }
 }

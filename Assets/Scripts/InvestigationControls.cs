@@ -159,8 +159,9 @@ class InvestigationControls : MonoBehaviour {
         }
 
         if (Input.GetKeyDown (KeyCode.M)) {
-            // open map
-            Debug.Log ("map");
+            HierarchyManager.Find ("Ingame Menu").GetComponent<IngameMenu> ().ToggleMapMenu ();
+            LeaveInvestigationMode ();
+            ScrollIndicator.Indicators.LeaveInvestigationMode ();
         }
     }
 
