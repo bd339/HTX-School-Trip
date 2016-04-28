@@ -378,7 +378,7 @@ class CooperScript : MonoBehaviour {
         } else if (command.StartsWith ("%")) {
             stalled = true;
             // play choice audio
-            Dialogue.ChatboxDialogue.Question = command.Substring (1);
+            Dialogue.ChatboxDialogue.Content.text = command.Substring (1);
 
             var answers = new Dictionary<string, int> ();
 

@@ -18,7 +18,7 @@ class Dialogue : MonoBehaviour {
         }
     }
 
-    private Text Content {
+    public Text Content {
         get {
             return HierarchyManager.Find ("Content", transform).GetComponent<Text> ();
         }
@@ -41,24 +41,10 @@ class Dialogue : MonoBehaviour {
         }
     }
 
-    private int dialogueIndex;
-    private int dialogueLength;
-    private string dialogueLine;
-    private float lastDialogueUpdate;
     public string DialogueLine {
         set {
             Content.text = "";
-
-            dialogueIndex = 0;
-            dialogueLength = value.Length - value.Count (c => c == '}');
-            dialogueLine = value;
-            lastDialogueUpdate = Time.time;
-        }
-    }
-
-    public string Question {
-        set {
-            Content.text = value;
+            StartCoroutine (PrintDialogue (value, dialogueDelay));
         }
     }
 
@@ -98,66 +84,6 @@ class Dialogue : MonoBehaviour {
         }
 
         Cursor.lockState = CursorLockMode.None;
-
-        if (dialogueLine != null) {
-            if (Content.text.Length == dialogueLength) {
-                if (Input.GetKeyDown (KeyCode.Space) ||
-                    Input.GetKeyDown (KeyCode.Return)||
-                    Input.GetKeyDown (KeyCode.RightArrow)||
-                    Input.GetMouseButtonDown (0)) {
-
-                    HierarchyManager.Find ("Next Indicator").SetActive (false);
-
-                    dialogueLine = null;
-                    CooperScript.Engine.stalled = false;
-                } else {
-                    var indicator = HierarchyManager.Find ("Next Indicator").GetComponent<Image> ();
-                    if (!indicator.gameObject.activeInHierarchy) {
-                        indicator.gameObject.SetActive (true);
-                        indicator.rectTransform.anchoredPosition = new Vector2 (-15, -5);
-                    }
-                }
-            } else if (dialogueLine [dialogueIndex] == '}') {
-                if (Input.GetKeyDown (KeyCode.Space) ||
-                    Input.GetKeyDown (KeyCode.Return)||
-                    Input.GetKeyDown (KeyCode.RightArrow)||
-                    Input.GetMouseButtonDown (0)) {
-
-                    HierarchyManager.Find ("Next Indicator").SetActive (false);
-
-                    dialogueIndex++;
-                } else {
-                    var indicator = HierarchyManager.Find ("Next Indicator").GetComponent<Image> ();
-                    if (!indicator.gameObject.activeInHierarchy) {
-                        indicator.gameObject.SetActive (true);
-                        float numLines = Content.preferredWidth / 1120f;
-                        float x = (numLines - Mathf.Floor (numLines)) * 1120f + 0.15f * 100 + Mathf.Floor (numLines) * 10f;
-                        float y = -Mathf.Floor (numLines) * 20f - 10f;
-                        indicator.rectTransform.anchoredPosition = new Vector2 (x, y);
-                    }
-                }
-            } else {
-                if (Input.GetKeyDown (KeyCode.Space) ||
-                    Input.GetKeyDown (KeyCode.Return)||
-                    Input.GetKeyDown (KeyCode.RightArrow)||
-                    Input.GetMouseButtonDown (0)) {
-
-                    var rem = dialogueLine.Substring (dialogueIndex);
-                    int newIndex = rem.IndexOf ('}');
-
-                    if (newIndex == -1) {
-                        Content.text += rem;
-                    } else {
-                        Content.text += rem.Substring (0, newIndex);
-                        dialogueIndex += rem.Substring (0, newIndex).Length;
-                    }
-                } else if (Time.time - lastDialogueUpdate >= dialogueDelay) {
-                    lastDialogueUpdate = Time.time;
-                    Content.text += dialogueLine [dialogueIndex];
-                    dialogueIndex++;
-                }
-            }
-        }
 
         if (origAnswers != null) {
             if (Input.GetKeyDown (KeyCode.UpArrow) || Input.mouseScrollDelta.y > 0) {
@@ -199,6 +125,68 @@ class Dialogue : MonoBehaviour {
             answers [answerIndex].color = new Color (226f / 255f, 18f / 255f, 219f / 255f, 255f);
             answers [answerIndex].GetComponent<Outline> ().effectColor = Color.white;
         }
+    }
+
+    private IEnumerator PrintDialogue (string line, float delay = 0.05f) {
+        int idx = 0;
+        int length = line.Length - line.Count (c => c == '}');
+        float lastUpdate = Time.time;
+
+        var indicator = HierarchyManager.Find ("Next Indicator").GetComponent<Image> ();
+
+        while (Content.text.Length != length) {
+            if (line [idx] == '}') {
+                indicator.gameObject.SetActive (true);
+
+                float numLines = Content.preferredWidth / 1120f;
+                float x = (numLines - Mathf.Floor (numLines)) * 1120f + 0.15f * 100 + Mathf.Floor (numLines) * 10f;
+                float y = -Mathf.Floor (numLines) * 20f - 10f;
+                indicator.rectTransform.anchoredPosition = new Vector2 (x, y);
+
+                yield return new WaitWhile (() => !ContinueDialogue ());
+
+                indicator.gameObject.SetActive (false);
+                idx++;
+
+                yield return null;
+            } else if (ContinueDialogue ()) {
+                var rem = line.Substring (idx);
+                int newIdx = rem.IndexOf ('}');
+
+                if (newIdx == -1) {
+                    Content.text += rem;
+                } else {
+                    Content.text += rem.Substring (0, newIdx);
+                    idx += rem.Substring (0, newIdx).Length;
+                }
+
+                yield return null;
+            } else {
+                if (Time.time - lastUpdate < delay) {
+                    yield return null;
+                    continue;
+                }
+
+                lastUpdate = Time.time;
+                Content.text += line [idx];
+                idx++;
+            }
+        }
+
+        indicator.gameObject.SetActive (true);
+        indicator.rectTransform.anchoredPosition = new Vector2 (-15, -5);
+
+        yield return new WaitWhile (() => !ContinueDialogue ());
+
+        indicator.gameObject.SetActive (false);
+        CooperScript.Engine.stalled = false;
+    }
+
+    private bool ContinueDialogue () {
+        return Input.GetKeyDown (KeyCode.Space) ||
+               Input.GetKeyDown (KeyCode.Return) ||
+               Input.GetKeyDown (KeyCode.RightArrow) ||
+               Input.GetMouseButtonDown (0);
     }
 
     private IEnumerator HideDialogueUI () {
