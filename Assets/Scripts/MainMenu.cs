@@ -29,7 +29,7 @@ class MainMenu : MonoBehaviour {
         if (pName.Length > 0) {
             PlayerPrefs.DeleteAll ();
             PlayerPrefs.SetString ("PlayerName", pName);
-            UnityEngine.SceneManagement.SceneManager.LoadScene ("test");
+            UnityEngine.SceneManagement.SceneManager.LoadScene ("chapter1");
         }
     }
 }

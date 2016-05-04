@@ -113,7 +113,7 @@ class CooperScript : MonoBehaviour {
                     newState.nameplate = sr.ReadLine ().Replace ("$PlayerName", PlayerPrefs.GetString ("PlayerName"));
 
                     while (sr.Peek () != '\\' && sr.Peek () != -1) {
-                        var command = sr.ReadLine ();
+                        var command = sr.ReadLine ().Replace ("$PlayerName", PlayerPrefs.GetString ("PlayerName"));
                         // skip empty lines and comments
                         if (command.Length > 0 && !command.StartsWith (";")) {
                             newCommands.Add (command);
@@ -168,18 +168,26 @@ class CooperScript : MonoBehaviour {
                     Dialogue.ChatboxDialogue.LeaveDialogueMode ();
                     // leave court mode
                     InvestigationControls.Controls.EnterInvestigationMode ();
+
+                    DestroyCharacters ();
                 } else if (i.Current == "dialogue") {
                     InvestigationControls.Controls.LeaveInvestigationMode ();
                     // leave court mode
                     Dialogue.ChatboxDialogue.EnterDialogueMode ();
+
+                    DestroyCharacters ();
                 } else if (i.Current == "court") {
                     InvestigationControls.Controls.LeaveInvestigationMode ();
                     Dialogue.ChatboxDialogue.LeaveDialogueMode ();
                     // enter court mode
+
+                    DestroyCharacters ();
                 } else {
                     InvestigationControls.Controls.LeaveInvestigationMode ();
                     Dialogue.ChatboxDialogue.LeaveDialogueMode ();
                     // leave court mode
+
+                    DestroyCharacters ();
                 }
             } else if (cmdName == "state") {
                 i.MoveNext ();
@@ -420,10 +428,14 @@ class CooperScript : MonoBehaviour {
                 // leave court mode
                 InvestigationControls.Controls.EnterInvestigationMode ();
 
-                foreach (Transform sprite in HierarchyManager.Find ("Characters").transform) {
-                    Destroy (sprite.gameObject);
-                }
+                DestroyCharacters ();
             }
+        }
+    }
+
+    private void DestroyCharacters () {
+        foreach (Transform sprite in HierarchyManager.Find ("Characters").transform) {
+            Destroy (sprite.gameObject);
         }
     }
 
