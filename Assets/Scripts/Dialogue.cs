@@ -96,7 +96,7 @@ class Dialogue : MonoBehaviour {
                 indicator.gameObject.SetActive (true);
 
                 float numLines = Content.preferredWidth / 1120f;
-                float x = (numLines - Mathf.Floor (numLines)) * 1120f + 0.15f * 100 + Mathf.Floor (numLines) * 10f;
+                float x = (numLines - Mathf.Floor (numLines)) * 1120f + 0.15f * 100 + Mathf.Floor (numLines) * 30f;
                 float y = -Mathf.Floor (numLines) * 20f - 10f;
                 indicator.rectTransform.anchoredPosition = new Vector2 (x, y);
 
