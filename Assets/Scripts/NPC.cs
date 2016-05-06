@@ -3,6 +3,10 @@
 class NPC : Hotspot {
 
     new protected void OnMouseDown () {
+        if (!InvestigationControls.Controls.enabled) {
+            return;
+        }
+
         Camera.main.GetComponent<InvestigationControls> ().Target = transform.position;
 
         StartCoroutine (RunScript ());

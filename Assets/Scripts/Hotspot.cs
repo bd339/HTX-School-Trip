@@ -20,6 +20,10 @@ class Hotspot : MonoBehaviour {
     }
 
     protected void OnMouseDown () {
+        if (!InvestigationControls.Controls.enabled) {
+            return;
+        }
+
         foreach (var h in FindObjectsOfType<Hotspot> ()) {
             h.GetComponent<BoxCollider> ().enabled = false;
         }
