@@ -69,6 +69,12 @@ class IngameMenu : MonoBehaviour {
             HierarchyManager.Find ("Inventory Preview").GetComponent<Image> ().sprite = null;
             HierarchyManager.Find ("Inventory Preview").GetComponent<Image> ().color = Color.clear;
             HierarchyManager.Find ("Preview Text").GetComponent<Text> ().text = "";
+        } else {
+            foreach (var item in HierarchyManager.FindObjectsOfType<InventoryItem> ()) {
+                if (PlayerPrefs.HasKey (item.flag)) {
+                    item.GetComponent<Image> ().enabled = true;
+                }
+            }
         }
     }
 

@@ -329,12 +329,6 @@ class CooperScript : MonoBehaviour {
             } else if (cmdName == "set flag") {
                 i.MoveNext ();
                 PlayerPrefs.SetInt (i.Current, 1);
-
-                foreach (var item in HierarchyManager.FindObjectsOfType<InventoryItem> ()) {
-                    if (item.flag == i.Current) {
-                        item.GetComponent<Image> ().enabled = true;
-                    }
-                }
             } else if (cmdName == "has flag") {
                 i.MoveNext ();
 
