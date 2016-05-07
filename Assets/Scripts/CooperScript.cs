@@ -376,6 +376,9 @@ class CooperScript : MonoBehaviour {
             } else if (cmdName == "flip") {
                 i.MoveNext ();
                 HierarchyManager.Find (i.Current).GetComponent<Image> ().transform.Rotate (0, 180, 0);
+            } else if (cmdName == "scene") {
+                i.MoveNext ();
+                UnityEngine.SceneManagement.SceneManager.LoadScene (i.Current);
             }
         } else if (command.StartsWith ("%")) {
             stalled = true;

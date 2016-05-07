@@ -87,6 +87,12 @@ class IngameMenu : MonoBehaviour {
 
         HierarchyManager.Find ("Map Menu").SetActive (!HierarchyManager.Find ("Map Menu").activeInHierarchy);
         ToggleDefaultUI ();
+
+        if (!HierarchyManager.Find ("Map Menu").activeInHierarchy) {
+            foreach (Transform t in HierarchyManager.Find ("Map Menu").transform) {
+                t.GetComponent<Image> ().color = Color.clear;
+            }
+        }
     }
 
     private void ToggleDefaultUI () {

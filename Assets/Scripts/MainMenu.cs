@@ -11,6 +11,22 @@ class MainMenu : MonoBehaviour {
     public void ShowChaptersMenu () {
         HierarchyManager.Find ("Chapters Menu").SetActive (true);
         HierarchyManager.Find ("Main Menu").SetActive (false);
+
+        HierarchyManager.Find ("Chapter 1 Button").GetComponent<Button> ().interactable = false;
+        HierarchyManager.Find ("Chapter 2 Button").GetComponent<Button> ().interactable = false;
+        HierarchyManager.Find ("Chapter 3 Button").GetComponent<Button> ().interactable = false;
+
+        if (PlayerPrefs.HasKey ("PlayerName")) {
+            HierarchyManager.Find ("Chapter 1 Button").GetComponent<Button> ().interactable = true;
+        }
+
+        if (PlayerPrefs.HasKey ("chapter1")) {
+            HierarchyManager.Find ("Chapter 2 Button").GetComponent<Button> ().interactable = true;
+        }
+
+        if (PlayerPrefs.HasKey ("chapter2")) {
+            HierarchyManager.Find ("Chapter 3 Button").GetComponent<Button> ().interactable = true;
+        }
     }
 
     public void ExitGame () {
@@ -31,5 +47,20 @@ class MainMenu : MonoBehaviour {
             PlayerPrefs.SetString ("PlayerName", pName);
             UnityEngine.SceneManagement.SceneManager.LoadScene ("chapter1");
         }
+    }
+
+    public void PlayChapter1 () {
+        // delete chapter 1 flags
+        PlayerPrefs.DeleteKey ("GowsiGlass");
+        PlayerPrefs.DeleteKey ("Player ID Card");
+        PlayerPrefs.DeleteKey ("Ferry Ticket");
+        UnityEngine.SceneManagement.SceneManager.LoadScene ("chapter1");
+    }
+
+    public void PlayChapter2 () {
+        //delete chapter 2 flags
+        //...
+        //...
+        UnityEngine.SceneManagement.SceneManager.LoadScene ("chapter2");
     }
 }
