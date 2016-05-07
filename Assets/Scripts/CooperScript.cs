@@ -434,8 +434,9 @@ class CooperScript : MonoBehaviour {
     }
 
     private void UpdateHotspots () {
-        foreach (Hotspot h in FindObjectsOfType<Hotspot> ()) {
+        foreach (Hotspot h in HierarchyManager.FindObjectsOfType<Hotspot> ()) {
             if (primaryStateId >= h.minState && h.maxState >= primaryStateId) {
+                h.gameObject.SetActive (true);
                 h.GetComponent<BoxCollider> ().enabled = true;
                 h.GetComponent<SpriteRenderer> ().enabled = true;
             } else {

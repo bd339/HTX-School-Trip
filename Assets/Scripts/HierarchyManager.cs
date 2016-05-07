@@ -2,19 +2,8 @@
 
 class HierarchyManager {
 
-    /*public static GameObject Find (string name) {
-        var go = GameObject.Find ("Root").transform.FindChildIncludingDeactivated (name);
-        return go != null ? go.gameObject : null;
-    }
-
-    public static GameObject Find (string name, Transform t) {
-        var go = t.FindChildIncludingDeactivated(name);
-        return go != null ? go.gameObject : null;
-    }*/
-
     public static T [] FindObjectsOfType<T> () where T : Component {
         return GameObject.Find ("Root").GetComponentsInChildren<T> (true);
-        //return GameObject.Find ("Root").transform.GetAllComponentsInChildren<T> ();
     }
 
     public static T FindObjectOfType<T> () where T : Component {
